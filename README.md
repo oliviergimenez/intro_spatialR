@@ -2,7 +2,7 @@
 
 In this repo, you will find the slides of my introduction to GIS and mapping in R using the `sf` package. Clone or download the repo, then just open the Rmd file and Knit it :smiley:
 
-The data are mostly big shapefiles that you can download directly from here.
+The data are mostly big shapefiles that you can download directly from [here](https://mycore.core-cloud.net/index.php/s/4xknhWGhp2PqRsJ).
 
 Alternatively, I also provide the html and the pdf (which I built using the awesome xaringan::decktape() function).
 
