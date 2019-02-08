@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GIS and mapping in R</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Olivier Gimenez" />
+    <meta name="date" content="2019-02-08" />
+    <link href="libs/font-awesome-5.3.1/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="rutgers-tidyverse.css" type="text/css" />
+    <link rel="stylesheet" href="rutgers-fonts_og.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# GIS and mapping in R
+## Introduction to the sf package
+### Olivier Gimenez
+### 2019-02-08
+
+---
+
+
+
+
+
+# Simple Features for R: the sf package
+
+&lt;img src="sfcartoon.jpg" width="700px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What's so nice about `sf`?
+
+* Easy to work with spatial data because the distinction between spatial data and other forms of data is minimized
+
+* Spatial objects are stored as **data frames**, with the feature geometries stored in list-columns
+
+* This is similar to the way that **spatial databases** are structured
+
+* All functions begin with `st_` for easy autofill with RStudio tab 
+
+* Functions are **pipe-friendly**
+
+* `dplyr` and `tidyr` verbs have been defined for the `sf` objects
+
+* `ggplot2` is able to plot `sf` objects directly
+
+&lt;img src="animatedsf.gif" width="100px" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Load packages
+
+
+```r
+library(sf) # GIS package
+```
+
+```
+## Linking to GEOS 3.6.1, GDAL 2.1.3, PROJ 4.9.3
+```
+
+```r
+library(tidyverse) # tidyverse packages, dplyr and ggplot2 among others
+```
+
+```
+## ── Attaching packages ─────────────────────────────────────────────────── tidyverse 1.2.1 ──
+```
+
+```
+## ✔ ggplot2 3.1.0.9000     ✔ purrr   0.2.5     
+## ✔ tibble  2.0.1          ✔ dplyr   0.7.8     
+## ✔ tidyr   0.8.2          ✔ stringr 1.3.1     
+## ✔ readr   1.3.1          ✔ forcats 0.3.0
+```
+
+```
+## ── Conflicts ────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+```
+
+```r
+theme_set(theme_minimal()) # set ggplot theme 
+```
+
+
+---
+
+## Vector layers in `sf`
+
+* The `sf` class is a hierarchical structure composed of 3 classes 
+    * In green, **sf** - Vector layer object, `data.frame` with `\(\geq 1\)` attribute columns and 1 geometry column
+    * In red, **sfc** - Geometric part of vector layer - geometry column
+    * In blue, **sfg** - Geometry of individual [simple feature](https://en.wikipedia.org/wiki/Simple_Features)
+
+&lt;img src="sf_xfig.png" width="1497" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+## Simple feature geometry **`sfg`**
+
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-5-1.png" width="550px" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Case study
+
+&lt;img src="oryxpaper.png" width="800px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Read in spatial data
+
+
+```r
+studysites_raw &lt;- st_read("bearpyrenees.shp")
+```
+
+```
+## Reading layer `bearpyrenees' from data source `/Users/oliviergimenez/Dropbox/OG/GITHUB/tidybear/slides/bearpyrenees.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 138 features and 4 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 315722.7 ymin: 1704775 xmax: 644368 ymax: 1800721
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=45.8989188889 +lat_2=47.6960144444 +lat_0=46.8 +lon_0=2.3372291667 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356514.999904194 +units=m +no_defs
+```
+
+---
+
+# Examine structure
+
+
+```r
+glimpse(studysites_raw)
+```
+
+```
+## Observations: 138
+## Variables: 5
+## $ Numero     &lt;dbl&gt; 640101, 640102, 640203, 640204, 640202, 640201, 64030…
+## $ pres_08_12 &lt;fct&gt; Absence, Absence, Occasionnelle, Occasionnelle, Absen…
+## $ Perimeter  &lt;dbl&gt; 53446.71, 60814.07, 38908.05, 32749.40, 36869.03, 376…
+## $ Iti2012    &lt;int&gt; NA, NA, 1, 1, NA, NA, NA, 1, 1, 1, 1, NA, 0, 1, 1, 1,…
+## $ geometry   &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((315785.1 17..., MULTIPOL…
+```
+
+---
+
+# Examine structure
+
+
+```r
+studysites_raw
+```
+
+```
+## Simple feature collection with 138 features and 4 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 315722.7 ymin: 1704775 xmax: 644368 ymax: 1800721
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=45.8989188889 +lat_2=47.6960144444 +lat_0=46.8 +lon_0=2.3372291667 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356514.999904194 +units=m +no_defs
+## First 10 features:
+##    Numero    pres_08_12 Perimeter Iti2012                       geometry
+## 1  640101       Absence  53446.71      NA MULTIPOLYGON (((315785.1 17...
+## 2  640102       Absence  60814.07      NA MULTIPOLYGON (((326069.1 17...
+## 3  640203 Occasionnelle  38908.05       1 MULTIPOLYGON (((328868.9 17...
+## 4  640204 Occasionnelle  32749.40       1 MULTIPOLYGON (((338223.2 17...
+## 5  640202       Absence  36869.03      NA MULTIPOLYGON (((348261.2 17...
+## 6  640201       Absence  37629.04      NA MULTIPOLYGON (((347345.4 17...
+## 7  640301       Absence  29586.76      NA MULTIPOLYGON (((350581.2 17...
+## 8  640302       Absence  25304.44       1 MULTIPOLYGON (((353106.3 17...
+## 9  640401 Occasionnelle  44181.28       1 MULTIPOLYGON (((353084 1783...
+## 10 640402     Reguliere  43850.75       1 MULTIPOLYGON (((359081.4 17...
+```
+
+
+---
+
+# Select relevant columns
+
+
+```r
+studysites &lt;- studysites_raw %&gt;%
+  select('bearpresence' = pres_08_12,
+         'idsite' = Numero)
+studysites
+```
+
+```
+## Simple feature collection with 138 features and 2 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 315722.7 ymin: 1704775 xmax: 644368 ymax: 1800721
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=45.8989188889 +lat_2=47.6960144444 +lat_0=46.8 +lon_0=2.3372291667 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356514.999904194 +units=m +no_defs
+## First 10 features:
+##     bearpresence idsite                       geometry
+## 1        Absence 640101 MULTIPOLYGON (((315785.1 17...
+## 2        Absence 640102 MULTIPOLYGON (((326069.1 17...
+## 3  Occasionnelle 640203 MULTIPOLYGON (((328868.9 17...
+## 4  Occasionnelle 640204 MULTIPOLYGON (((338223.2 17...
+## 5        Absence 640202 MULTIPOLYGON (((348261.2 17...
+## 6        Absence 640201 MULTIPOLYGON (((347345.4 17...
+## 7        Absence 640301 MULTIPOLYGON (((350581.2 17...
+## 8        Absence 640302 MULTIPOLYGON (((353106.3 17...
+## 9  Occasionnelle 640401 MULTIPOLYGON (((353084 1783...
+## 10     Reguliere 640402 MULTIPOLYGON (((359081.4 17...
+```
+
+---
+
+# Our first map
+
+
+```r
+studysites %&gt;%
+  ggplot() +
+  geom_sf() +
+  labs(title = 'Brown bear monitoring sites in the French Pyrenees mountains',
+       subtitle = 'Source: French Game and Wildlife Agency')
+```
+
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Where did the species occur?
+
+
+```r
+studysites %&gt;%
+  ggplot() +
+* geom_sf(aes(fill = bearpresence)) +
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Game and Wildlife Agency')
+```
+
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Where did the species occur?
+
+
+```r
+studysites %&gt;%
+  ggplot() +
+  geom_sf(aes(fill = bearpresence)) +
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Game and Wildlife Agency') +
+* scale_fill_manual(values = c('gray90','steelblue1','steelblue4'),
+*                   name = "Bear presence",
+*                   labels = c("Absent", "Occasional", "Regular"))
+```
+
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-13-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Forest cover
+
+* Forest cover might be a driver of brown bear distribution
+
+* We use corine land cover (CLC) data (2012 version) to get forest cover
+
+* Data can be downloaded [from the official website](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/li/2539.html)
+
+* An explanation of what's in the data is available [here](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/t/nomenclature-standard.html?tx_ttnews[tt_news]=24270&amp;cHash=2c5863bd046f51082f76794ba2355880).  
+
+---
+
+# Read in data
+
+
+```r
+clc2012 &lt;- st_read("CLC12_FR_RGF.shp")
+```
+
+```
+## Reading layer `CLC12_FR_RGF' from data source `/Users/oliviergimenez/Dropbox/OG/GITHUB/tidybear/slides/CLC12_FR_RGF.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 274573 features and 3 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 73767.79 ymin: 6021170 xmax: 1267595 ymax: 7133490
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+```
+
+---
+
+# Read in data
+
+
+```r
+clc2012
+```
+
+```
+## Simple feature collection with 274573 features and 3 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 73767.79 ymin: 6021170 xmax: 1267595 ymax: 7133490
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##           ID CODE_12      AREA_HA                       geometry
+## 1  FR-274573     523 4.879872e+06 POLYGON ((657640.6 7133490,...
+## 2  FR-271961     423 8.555978e+02 POLYGON ((669050 7111012, 6...
+## 3  FR-265902     331 3.092622e+02 POLYGON ((669132.3 7110834,...
+## 4  FR-250624     322 7.593459e+01 POLYGON ((669181.5 7110656,...
+## 5  FR-250623     322 1.826213e+02 POLYGON ((666715.4 7109580,...
+## 6   FR-25381     112 3.282088e+02 POLYGON ((666715.4 7109580,...
+## 7  FR-265901     331 2.503051e+01 POLYGON ((667326.7 7108770,...
+## 8  FR-147959     242 6.157960e+01 POLYGON ((669097.7 7109171,...
+## 9  FR-270463     333 2.949202e+01 POLYGON ((666773.8 7109345,...
+## 10  FR-62513     211 9.808718e+05 POLYGON ((669737.1 7108874,...
+```
+
+---
+
+# Extract forest codes
+
+```r
+forest &lt;- clc2012 %&gt;%
+  filter(CODE_12 == 311 | CODE_12 == 312 | CODE_12 == 313)
+forest
+```
+
+```
+## Simple feature collection with 69111 features and 3 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 125951.9 ymin: 6021917 xmax: 1243919 ymax: 7100648
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##           ID CODE_12    AREA_HA                       geometry
+## 1  FR-211653     311  114.81939 POLYGON ((657867.2 7100629,...
+## 2  FR-227070     312   29.01440 POLYGON ((632270.7 7100616,...
+## 3  FR-211652     311   36.78086 POLYGON ((630186.3 7100313,...
+## 4  FR-211651     311   90.71384 POLYGON ((625545 7098175, 6...
+## 5  FR-211650     311   32.23925 POLYGON ((660260.8 7097323,...
+## 6  FR-211649     311   43.00924 POLYGON ((607150.2 7090018,...
+## 7  FR-211648     311   25.39949 POLYGON ((626532.2 7086540,...
+## 8  FR-211647     311   45.10054 POLYGON ((669017.5 7085727,...
+## 9  FR-211646     311 1005.69349 POLYGON ((618120.9 7082302,...
+## 10 FR-211645     311   62.38459 POLYGON ((603423.4 7085365,...
+```
+
+---
+
+# Use same coordinates system for map of the Pyrénées and forest layer
+
+```r
+studysites &lt;- studysites %&gt;% 
+  st_transform(crs = st_crs(forest)) 
+studysites
+```
+
+```
+## Simple feature collection with 138 features and 2 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 362039 ymin: 6139034 xmax: 690160.2 ymax: 6235505
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##     bearpresence idsite                       geometry
+## 1        Absence 640101 MULTIPOLYGON (((362110.5 62...
+## 2        Absence 640102 MULTIPOLYGON (((372352.1 62...
+## 3  Occasionnelle 640203 MULTIPOLYGON (((375125.4 62...
+## 4  Occasionnelle 640204 MULTIPOLYGON (((384447.4 62...
+## 5        Absence 640202 MULTIPOLYGON (((394521 6219...
+## 6        Absence 640201 MULTIPOLYGON (((393646.7 62...
+## 7        Absence 640301 MULTIPOLYGON (((396923.9 62...
+## 8        Absence 640302 MULTIPOLYGON (((399383.2 62...
+## 9  Occasionnelle 640401 MULTIPOLYGON (((399338.3 62...
+## 10     Reguliere 640402 MULTIPOLYGON (((405268.8 62...
+```
+
+---
+
+# Calculate area of each site
+
+```r
+studysites %&gt;% 
+  mutate(area = st_area(.))
+```
+
+```
+## Simple feature collection with 138 features and 3 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 362039 ymin: 6139034 xmax: 690160.2 ymax: 6235505
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##     bearpresence idsite            area                       geometry
+## 1        Absence 640101  79618924 [m^2] MULTIPOLYGON (((362110.5 62...
+## 2        Absence 640102 122155210 [m^2] MULTIPOLYGON (((372352.1 62...
+## 3  Occasionnelle 640203  64012619 [m^2] MULTIPOLYGON (((375125.4 62...
+## 4  Occasionnelle 640204  36208552 [m^2] MULTIPOLYGON (((384447.4 62...
+## 5        Absence 640202  67904470 [m^2] MULTIPOLYGON (((394521 6219...
+## 6        Absence 640201  58455872 [m^2] MULTIPOLYGON (((393646.7 62...
+## 7        Absence 640301  30310636 [m^2] MULTIPOLYGON (((396923.9 62...
+## 8        Absence 640302  25866722 [m^2] MULTIPOLYGON (((399383.2 62...
+## 9  Occasionnelle 640401  72321198 [m^2] MULTIPOLYGON (((399338.3 62...
+## 10     Reguliere 640402  67797321 [m^2] MULTIPOLYGON (((405268.8 62...
+```
+
+---
+
+# Convert area in km&lt;sup&gt;2&lt;/sup&gt;
+
+```r
+studysites %&gt;% 
+  mutate(area = st_area(.),
+*        areakm2 = units::set_units(area, km^2))
+```
+
+```
+## Simple feature collection with 138 features and 4 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 362039 ymin: 6139034 xmax: 690160.2 ymax: 6235505
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##     bearpresence idsite            area          areakm2
+## 1        Absence 640101  79618924 [m^2]  79.61892 [km^2]
+## 2        Absence 640102 122155210 [m^2] 122.15521 [km^2]
+## 3  Occasionnelle 640203  64012619 [m^2]  64.01262 [km^2]
+## 4  Occasionnelle 640204  36208552 [m^2]  36.20855 [km^2]
+## 5        Absence 640202  67904470 [m^2]  67.90447 [km^2]
+## 6        Absence 640201  58455872 [m^2]  58.45587 [km^2]
+## 7        Absence 640301  30310636 [m^2]  30.31064 [km^2]
+## 8        Absence 640302  25866722 [m^2]  25.86672 [km^2]
+## 9  Occasionnelle 640401  72321198 [m^2]  72.32120 [km^2]
+## 10     Reguliere 640402  67797321 [m^2]  67.79732 [km^2]
+##                          geometry
+## 1  MULTIPOLYGON (((362110.5 62...
+## 2  MULTIPOLYGON (((372352.1 62...
+## 3  MULTIPOLYGON (((375125.4 62...
+## 4  MULTIPOLYGON (((384447.4 62...
+## 5  MULTIPOLYGON (((394521 6219...
+## 6  MULTIPOLYGON (((393646.7 62...
+## 7  MULTIPOLYGON (((396923.9 62...
+## 8  MULTIPOLYGON (((399383.2 62...
+## 9  MULTIPOLYGON (((399338.3 62...
+## 10 MULTIPOLYGON (((405268.8 62...
+```
+---
+
+# Define big sites (area &gt; 200 km&lt;sup&gt;2&lt;/sup&gt;)
+
+```r
+studysites &lt;- studysites %&gt;% 
+  mutate(area = st_area(.),
+         areakm2 = units::set_units(area, km^2),
+*        bigsites = ifelse(as.numeric(areakm2) &gt; 200, areakm2, NA))
+studysites
+```
+
+```
+## Simple feature collection with 138 features and 5 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 362039 ymin: 6139034 xmax: 690160.2 ymax: 6235505
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+## First 10 features:
+##     bearpresence idsite            area          areakm2 bigsites
+## 1        Absence 640101  79618924 [m^2]  79.61892 [km^2]       NA
+## 2        Absence 640102 122155210 [m^2] 122.15521 [km^2]       NA
+## 3  Occasionnelle 640203  64012619 [m^2]  64.01262 [km^2]       NA
+## 4  Occasionnelle 640204  36208552 [m^2]  36.20855 [km^2]       NA
+## 5        Absence 640202  67904470 [m^2]  67.90447 [km^2]       NA
+## 6        Absence 640201  58455872 [m^2]  58.45587 [km^2]       NA
+## 7        Absence 640301  30310636 [m^2]  30.31064 [km^2]       NA
+## 8        Absence 640302  25866722 [m^2]  25.86672 [km^2]       NA
+## 9  Occasionnelle 640401  72321198 [m^2]  72.32120 [km^2]       NA
+## 10     Reguliere 640402  67797321 [m^2]  67.79732 [km^2]       NA
+##                          geometry
+## 1  MULTIPOLYGON (((362110.5 62...
+## 2  MULTIPOLYGON (((372352.1 62...
+## 3  MULTIPOLYGON (((375125.4 62...
+## 4  MULTIPOLYGON (((384447.4 62...
+## 5  MULTIPOLYGON (((394521 6219...
+## 6  MULTIPOLYGON (((393646.7 62...
+## 7  MULTIPOLYGON (((396923.9 62...
+## 8  MULTIPOLYGON (((399383.2 62...
+## 9  MULTIPOLYGON (((399338.3 62...
+## 10 MULTIPOLYGON (((405268.8 62...
+```
+
+---
+
+# Map again, with area on top of big sites
+
+```r
+studysites %&gt;%
+  ggplot() + 
+  geom_sf() +
+* ggsflabel::geom_sf_label_repel(aes(label = bigsites)) +
+  labs(title = 'Brown bear big monitoring sites in the French Pyrenees mountains',
+       subtitle = 'Big sites have area &gt; 200km2',
+       caption = 'Data from: French Game and Wildlife Agency') +
+  xlab("") + ylab("")
+```
+
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Crop forest to match study area boundaries
+
+```r
+forest %&gt;% 
+* st_crop(st_bbox(studysites)) %&gt;%
+  as_tibble()
+```
+
+```
+## # A tibble: 2,504 x 4
+##    ID      CODE_12 AREA_HA                                         geometry
+##    &lt;fct&gt;   &lt;fct&gt;     &lt;dbl&gt;                                   &lt;GEOMETRY [m]&gt;
+##  1 FR-174… 311       2807. MULTIPOLYGON (((479636.9 6235505, 479719.6 6235…
+##  2 FR-174… 311       2409. POLYGON ((442252.5 6235505, 442429.7 6235438, 4…
+##  3 FR-174… 311       2843. MULTIPOLYGON (((396335.1 6235505, 396346.2 6235…
+##  4 FR-174… 311        476. POLYGON ((471577.9 6235505, 471467.3 6235289, 4…
+##  5 FR-174… 311        588. POLYGON ((490987.1 6235505, 491006.8 6235337, 4…
+##  6 FR-174… 311        354. MULTIPOLYGON (((484715.2 6235505, 484694.9 6235…
+##  7 FR-174… 311        579. MULTIPOLYGON (((500091.4 6235505, 500058.3 6235…
+##  8 FR-174… 311        357. POLYGON ((509149.7 6235505, 509148.6 6235486, 5…
+##  9 FR-174… 311       6202. MULTIPOLYGON (((379133.9 6235505, 379132.4 6235…
+## 10 FR-174… 311        292. POLYGON ((451256.3 6235505, 451260.6 6235447, 4…
+## # … with 2,494 more rows
+```
+
+---
+
+# Then intersect the two layers
+
+```r
+forest %&gt;% 
+  st_crop(st_bbox(studysites)) %&gt;%
+* st_intersection(studysites) %&gt;%
+  as_tibble()
+```
+
+```
+## # A tibble: 2,177 x 9
+##    ID    CODE_12 AREA_HA bearpresence idsite area  areakm2 bigsites
+##    &lt;fct&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt;
+##  1 FR-1… 311       243.  Absence      640101 7961… 79.618…       NA
+##  2 FR-1… 311     18041.  Absence      640101 7961… 79.618…       NA
+##  3 FR-1… 311       289.  Absence      640101 7961… 79.618…       NA
+##  4 FR-1… 311       235.  Absence      640101 7961… 79.618…       NA
+##  5 FR-1… 311       153.  Absence      640101 7961… 79.618…       NA
+##  6 FR-1… 311        83.7 Absence      640101 7961… 79.618…       NA
+##  7 FR-1… 311        26.9 Absence      640101 7961… 79.618…       NA
+##  8 FR-1… 311      2697.  Absence      640101 7961… 79.618…       NA
+##  9 FR-1… 311        49.2 Absence      640101 7961… 79.618…       NA
+## 10 FR-1… 311        52.6 Absence      640101 7961… 79.618…       NA
+## # … with 2,167 more rows, and 1 more variable: geometry &lt;GEOMETRY [m]&gt;
+```
+
+---
+
+# Get forest area for each intersected `sfg`
+
+```r
+forest %&gt;% 
+  st_crop(st_bbox(studysites)) %&gt;%
+  st_intersection(studysites) %&gt;%
+* mutate(area = st_area(.)) %&gt;%
+  as_tibble()
+```
+
+```
+## # A tibble: 2,177 x 9
+##    ID    CODE_12 AREA_HA bearpresence idsite area  areakm2 bigsites
+##    &lt;fct&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt;
+##  1 FR-1… 311       243.  Absence      640101   64… 79.618…       NA
+##  2 FR-1… 311     18041.  Absence      640101  535… 79.618…       NA
+##  3 FR-1… 311       289.  Absence      640101  258… 79.618…       NA
+##  4 FR-1… 311       235.  Absence      640101   56… 79.618…       NA
+##  5 FR-1… 311       153.  Absence      640101  153… 79.618…       NA
+##  6 FR-1… 311        83.7 Absence      640101   83… 79.618…       NA
+##  7 FR-1… 311        26.9 Absence      640101   26… 79.618…       NA
+##  8 FR-1… 311      2697.  Absence      640101 2193… 79.618…       NA
+##  9 FR-1… 311        49.2 Absence      640101   49… 79.618…       NA
+## 10 FR-1… 311        52.6 Absence      640101   52… 79.618…       NA
+## # … with 2,167 more rows, and 1 more variable: geometry &lt;GEOMETRY [m]&gt;
+```
+
+---
+
+# Sum forest over all study sites
+
+```r
+forestpyrenees &lt;- forest %&gt;% 
+  st_crop(st_bbox(studysites)) %&gt;%
+  st_intersection(studysites) %&gt;%
+  mutate(area = st_area(.)) %&gt;%
+* group_by(idsite) %&gt;% # groups a data frame by variables
+* summarise(areaforest = sum(area)) %&gt;%  # perform group-wise summaries
+  as_tibble()
+forestpyrenees
+```
+
+```
+## # A tibble: 138 x 3
+##    idsite areaforest                                               geometry
+##     &lt;dbl&gt; &lt;S3: units&gt;                                    &lt;MULTIPOLYGON [m]&gt;
+##  1  11403 157762282 [m… (((676592.7 6193371, 676678 6193451, 676728.8 6193…
+##  2  11404  32526319 [m… (((686188.6 6212091, 686132.8 6212085, 686099.4 62…
+##  3  90101 137218858 [m… (((549792.8 6212012, 549802.4 6212008, 549801.6 62…
+##  4  90102  86944708 [m… (((549802.4 6212008, 549804.2 6212008, 549801.6 62…
+##  5  90103  82872880 [m… (((586882.2 6211909, 586901.2 6211962, 586919.6 62…
+##  6  90104  42241267 [m… (((584856.5 6214670, 584865.8 6214672, 584878.2 62…
+##  7  90201  19224150 [m… (((549791 6208948, 549789 6208964, 549781.2 620902…
+##  8  90202  26309123 [m… (((544687.7 6199316, 544645.8 6199341, 544646.3 61…
+##  9  90203  31962484 [m… (((547362.3 6196592, 547543.3 6196596, 547873.8 61…
+## 10  90301   8958589 [m… (((530897.2 6192630, 531030.1 6192728, 531088.9 61…
+## # … with 128 more rows
+```
+
+---
+
+# Join `sf` and `tibble` objects
+
+```r
+studysites %&gt;% 
+* inner_join(forestpyrenees, by = 'idsite') %&gt;%
+  as.tibble()
+```
+
+```
+## # A tibble: 138 x 9
+##    bearpresence idsite area  areakm2 bigsites areaforest
+##    &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt; &lt;S3: unit&gt;
+##  1 Absence      640101  796…  79.61…       NA 42105194 …
+##  2 Absence      640102 1221… 122.15…       NA 60136750 …
+##  3 Occasionnel… 640203  640…  64.01…       NA 26652318 …
+##  4 Occasionnel… 640204  362…  36.20…       NA 21003797 …
+##  5 Absence      640202  679…  67.90…       NA 42325894 …
+##  6 Absence      640201  584…  58.45…       NA 22478565 …
+##  7 Absence      640301  303…  30.31…       NA 13955020 …
+##  8 Absence      640302  258…  25.86…       NA 19648844 …
+##  9 Occasionnel… 640401  723…  72.32…       NA 31347244 …
+## 10 Reguliere    640402  677…  67.79…       NA 21175525 …
+## # … with 128 more rows, and 3 more variables: geometry.x &lt;MULTIPOLYGON
+## #   [m]&gt;, geometry.y &lt;MULTIPOLYGON [m]&gt;, geometry &lt;GEOMETRYCOLLECTION&gt;
+```
+
+---
+
+# Calculate forest cover
+
+```r
+covariates &lt;- studysites %&gt;% 
+* inner_join(forestpyrenees, by = 'idsite') %&gt;%
+  mutate(forestcover = areaforest / area)
+as.tibble(covariates)
+```
+
+```
+## # A tibble: 138 x 10
+##    bearpresence idsite area  areakm2 bigsites areaforest forestcover
+##    &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt; &lt;S3: unit&gt; &lt;S3: units&gt;
+##  1 Absence      640101  796…  79.61…       NA 42105194 … 0.5288340 …
+##  2 Absence      640102 1221… 122.15…       NA 60136750 … 0.4922979 …
+##  3 Occasionnel… 640203  640…  64.01…       NA 26652318 … 0.4163604 …
+##  4 Occasionnel… 640204  362…  36.20…       NA 21003797 … 0.5800784 …
+##  5 Absence      640202  679…  67.90…       NA 42325894 … 0.6233153 …
+##  6 Absence      640201  584…  58.45…       NA 22478565 … 0.3845390 …
+##  7 Absence      640301  303…  30.31…       NA 13955020 … 0.4604001 …
+##  8 Absence      640302  258…  25.86…       NA 19648844 … 0.7596186 …
+##  9 Occasionnel… 640401  723…  72.32…       NA 31347244 … 0.4334448 …
+## 10 Reguliere    640402  677…  67.79…       NA 21175525 … 0.3123357 …
+## # … with 128 more rows, and 3 more variables: geometry.x &lt;MULTIPOLYGON
+## #   [m]&gt;, geometry.y &lt;MULTIPOLYGON [m]&gt;, geometry &lt;GEOMETRYCOLLECTION&gt;
+```
+
+
+---
+
+# Map forest cover
+
+```r
+covariates %&gt;%
+  ggplot() +
+  aes(fill = as.numeric(forestcover)) +
+  geom_sf(lwd = 0.1) +
+  scale_fill_viridis_c(
+    labels = scales::percent_format(), # format percentage
+    name = 'forest cover',
+    alpha = 0.7) +  # control transparency
+  labs(title = 'Map of forest cover in the Pyrenees mountains',
+       subtitle = 'Source: Corine Land Cover 2012')
+```
+
+---
+
+# Map forest cover
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-29-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Human density
+
+* Human density might be a driver of brown bear distribution
+
+* We use data on population size of cities in France
+
+* A more detailed analysis of human density in France is available from @SharpSightLabs  [here](https://www.sharpsightlabs.com/blog/mapping-france-night/)  
+
+---
+
+# Human density
+
+
+```r
+url.france_pop &lt;- url("https://vrzkj25a871bpq7t1ugcgmn9-wpengine.netdna-ssl.com/wp-content/datasets/france_population_data_2016.RData")
+load(url.france_pop)
+glimpse(df.france)
+```
+
+```
+## Observations: 35,798
+## Variables: 18
+## $ ID_GEOFLA  &lt;fct&gt; COMMUNE00000000000000001, COMMUNE00000000000000002, C…
+## $ CODE_COM   &lt;fct&gt; 216, 033, 009, 225, 890, 018, 113, 319, 097, 070, 046…
+## $ INSEE_COM  &lt;fct&gt; 32216, 47033, 32009, 38225, 62890, 08018, 32113, 1031…
+## $ NOM_COM    &lt;fct&gt; LOURTIES-MONBRUN, BOUDY-DE-BEAUREGARD, ARMOUS-ET-CAU,…
+## $ STATUT     &lt;fct&gt; Commune simple, Commune simple, Commune simple, Commu…
+## $ X_CHF_LIEU &lt;int&gt; 500820, 516424, 472979, 898640, 640049, 824246, 46133…
+## $ Y_CHF_LIEU &lt;int&gt; 6264958, 6384852, 6278963, 6450689, 7028672, 6908952,…
+## $ X_CENTROID &lt;int&gt; 500515, 515575, 473004, 898625, 640115, 824391, 46072…
+## $ Y_CENTROID &lt;int&gt; 6265413, 6385938, 6278937, 6451597, 7029900, 6908954,…
+## $ Z_MOYEN    &lt;int&gt; 252, 112, 221, 1234, 79, 125, 134, 167, 752, 438, 127…
+## $ SUPERFICIE &lt;dbl&gt; 966, 1019, 932, 3371, 1023, 438, 919, 1904, 2217, 266…
+## $ POPULATION &lt;dbl&gt; 139, 414, 95, 2973, 178, 80, 97, 362, 296, 901, 10, 1…
+## $ CODE_ARR   &lt;fct&gt; 3, 3, 3, 1, 4, 4, 2, 3, 2, 2, 2, 3, 2, 1, 1, 3, 2, 1,…
+## $ CODE_DEPT  &lt;fct&gt; 32, 47, 32, 38, 62, 08, 32, 10, 06, 42, 31, 71, 53, 1…
+## $ NOM_DEPT   &lt;fct&gt; GERS, LOT-ET-GARONNE, GERS, ISERE, PAS-DE-CALAIS, ARD…
+## $ CODE_REG   &lt;fct&gt; 76, 75, 76, 84, 32, 44, 76, 44, 93, 84, 76, 27, 52, 7…
+## $ NOM_REG    &lt;fct&gt; LANGUEDOC-ROUSSILLON-MIDI-PYRENEES, AQUITAINE-LIMOUSI…
+## $ geometry   &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((499484.6 62..., MULTIPOL…
+```
+
+---
+
+# Transform into lower case
+
+```r
+colnames(df.france) &lt;- colnames(df.france) %&gt;% 
+  str_to_lower()
+colnames(df.france)
+```
+
+```
+##  [1] "id_geofla"  "code_com"   "insee_com"  "nom_com"    "statut"    
+##  [6] "x_chf_lieu" "y_chf_lieu" "x_centroid" "y_centroid" "z_moyen"   
+## [11] "superficie" "population" "code_arr"   "code_dept"  "nom_dept"  
+## [16] "code_reg"   "nom_reg"    "geometry"
+```
+
+---
+
+# Have a look to the distribution
+
+```r
+df.france$population %&gt;% 
+  summary()
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0     197     442    1779    1100  458298
+```
+
+---
+
+# Calculate density
+
+```r
+df.france &lt;- df.france %&gt;% 
+  mutate(density = population/superficie*100)
+as.tibble(df.france)
+```
+
+```
+## # A tibble: 35,798 x 19
+##    id_geofla code_com insee_com nom_com statut x_chf_lieu y_chf_lieu
+##    &lt;fct&gt;     &lt;fct&gt;    &lt;fct&gt;     &lt;fct&gt;   &lt;fct&gt;       &lt;int&gt;      &lt;int&gt;
+##  1 COMMUNE0… 216      32216     LOURTI… Commu…     500820    6264958
+##  2 COMMUNE0… 033      47033     BOUDY-… Commu…     516424    6384852
+##  3 COMMUNE0… 009      32009     ARMOUS… Commu…     472979    6278963
+##  4 COMMUNE0… 225      38225     AUTRAN… Commu…     898640    6450689
+##  5 COMMUNE0… 890      62890     WILLEM… Commu…     640049    7028672
+##  6 COMMUNE0… 018      08018     ARDEUI… Commu…     824246    6908952
+##  7 COMMUNE0… 113      32113     CRAVEN… Commu…     461332    6300782
+##  8 COMMUNE0… 319      10319     RIGNY-… Commu…     746925    6790005
+##  9 COMMUNE0… 097      06097     PIERRE… Commu…    1028827    6315717
+## 10 COMMUNE0… 070      42070     CORDEL… Commu…     782215    6538794
+## # … with 35,788 more rows, and 12 more variables: x_centroid &lt;int&gt;,
+## #   y_centroid &lt;int&gt;, z_moyen &lt;int&gt;, superficie &lt;dbl&gt;, population &lt;dbl&gt;,
+## #   code_arr &lt;fct&gt;, code_dept &lt;fct&gt;, nom_dept &lt;fct&gt;, code_reg &lt;fct&gt;,
+## #   nom_reg &lt;fct&gt;, density &lt;dbl&gt;, geometry &lt;MULTIPOLYGON [m]&gt;
+```
+
+---
+
+# Show density
+
+```r
+df.france %&gt;%
+  pull(density) %&gt;%
+  head()
+```
+
+```
+## [1] 14.38923 40.62807 10.19313 88.19341 17.39980 18.26484
+```
+
+---
+
+# Sum population size over sites
+
+```r
+df.pyrenees &lt;- df.france %&gt;% 
+  st_transform(crs = st_crs(forest)) %&gt;%
+  st_crop(st_bbox(covariates)) %&gt;%
+  st_intersection(covariates) %&gt;%
+  group_by(idsite) %&gt;%
+  summarise(humpop = sum(population)) %&gt;%
+  as_tibble()
+df.pyrenees
+```
+
+```
+## # A tibble: 138 x 3
+##    idsite humpop                                                   geometry
+##     &lt;dbl&gt;  &lt;dbl&gt;                                             &lt;GEOMETRY [m]&gt;
+##  1  11403  10711 POLYGON ((686826.1 6201517, 686569.5 6201391, 686384.7 62…
+##  2  11404   7576 POLYGON ((686245.1 6212172, 686121.8 6211996, 685755 6211…
+##  3  90101  33154 POLYGON ((541430.8 6217206, 541320 6217162, 541205.9 6217…
+##  4  90102  17391 POLYGON ((551994.2 6217942, 551943.8 6217955, 551856.6 62…
+##  5  90103  19126 MULTIPOLYGON (((559357.6 6211513, 559174.4 6211530, 55915…
+##  6  90104  28000 POLYGON ((586455.6 6214769, 586476.5 6214741, 586664.2 62…
+##  7  90201   8203 POLYGON ((549096.2 6203616, 549051.8 6203591, 549032.7 62…
+##  8  90202   2554 POLYGON ((546852.7 6204385, 546961.9 6204404, 546853.6 62…
+##  9  90203   3505 MULTIPOLYGON (((545041.7 6197354, 545031.8 6197359, 54504…
+## 10  90301    285 POLYGON ((533167.3 6195384, 533210.4 6195336, 533210.1 61…
+## # … with 128 more rows
+```
+
+---
+
+# Join, then calculate density
+
+```r
+covariates &lt;- covariates %&gt;% 
+  inner_join(df.pyrenees,by='idsite') %&gt;%
+  mutate(humdens = humpop / (area/1000000))
+as.tibble(covariates)
+```
+
+```
+## # A tibble: 138 x 13
+##    bearpresence idsite area  areakm2 bigsites areaforest forestcover humpop
+##    &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt; &lt;S3: unit&gt; &lt;S3: units&gt;  &lt;dbl&gt;
+##  1 Absence      640101  796…  79.61…       NA 42105194 … 0.5288340 …   1253
+##  2 Absence      640102 1221… 122.15…       NA 60136750 … 0.4922979 …   2001
+##  3 Occasionnel… 640203  640…  64.01…       NA 26652318 … 0.4163604 …    641
+##  4 Occasionnel… 640204  362…  36.20…       NA 21003797 … 0.5800784 …   1877
+##  5 Absence      640202  679…  67.90…       NA 42325894 … 0.6233153 …   2066
+##  6 Absence      640201  584…  58.45…       NA 22478565 … 0.3845390 …   3983
+##  7 Absence      640301  303…  30.31…       NA 13955020 … 0.4604001 …   1782
+##  8 Absence      640302  258…  25.86…       NA 19648844 … 0.7596186 …   1827
+##  9 Occasionnel… 640401  723…  72.32…       NA 31347244 … 0.4334448 …   2877
+## 10 Reguliere    640402  677…  67.79…       NA 21175525 … 0.3123357 …    864
+## # … with 128 more rows, and 5 more variables: humdens &lt;S3: units&gt;,
+## #   geometry.x &lt;MULTIPOLYGON [m]&gt;, geometry.y &lt;MULTIPOLYGON [m]&gt;,
+## #   geometry.x.x &lt;GEOMETRYCOLLECTION&gt;, geometry.y.y &lt;GEOMETRY [m]&gt;
+```
+
+---
+
+# Map human population density
+
+```r
+covariates %&gt;%
+  ggplot() +
+  aes(fill = as.numeric(humdens)) +
+  geom_sf(lwd = 0.1) +
+  scale_fill_viridis_c(
+    name = bquote('Density\n(people per km'^2*')'),
+    alpha = 0.7) + 
+  labs(title = 'Human population density',
+       subtitle = 'Source: https://www.sharpsightlabs.com/blog/mapping-france-night/')
+```
+
+---
+
+# Map human population density
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-38-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Distance to highways
+
+* Distance to highways might be a driver of brown bear distribution
+
+* We use data from [Route500 database](http://professionnels.ign.fr/route500#tab-3)
+
+---
+
+# Read in data
+
+```r
+roads &lt;- st_read("TRONCON_ROUTE.shp")
+```
+
+```
+## Reading layer `TRONCON_ROUTE' from data source `/Users/oliviergimenez/Dropbox/OG/GITHUB/tidybear/slides/TRONCON_ROUTE.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 339250 features and 12 fields
+## geometry type:  LINESTRING
+## dimension:      XY
+## bbox:           xmin: 100076.5 ymin: 6021027 xmax: 1329738 ymax: 7120638
+## epsg (SRID):    NA
+## proj4string:    +proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs
+```
+
+---
+
+# Read in data
+
+```r
+as.tibble(roads)
+```
+
+```
+## # A tibble: 339,250 x 13
+##    ID_RTE500 VOCATION NB_CHAUSSE NB_VOIES ETAT  ACCES RES_VERT SENS 
+##        &lt;int&gt; &lt;fct&gt;    &lt;fct&gt;      &lt;fct&gt;    &lt;fct&gt; &lt;fct&gt; &lt;fct&gt;    &lt;fct&gt;
+##  1         1 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  2         2 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  3         3 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  4         4 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  5         5 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  6         6 Liaison… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  7         7 "Liaiso… "1 chauss… 2 voies… "Rev… Libre N'appar… Sens…
+##  8         8 "Liaiso… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+##  9         9 "Liaiso… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+## 10        10 "Liaiso… "1 chauss… "1 voie… "Rev… Libre N'appar… Doub…
+## # … with 339,240 more rows, and 5 more variables: RES_EUROPE &lt;fct&gt;,
+## #   NUM_ROUTE &lt;fct&gt;, CLASS_ADM &lt;fct&gt;, LONGUEUR &lt;dbl&gt;, geometry &lt;LINESTRING
+## #   [m]&gt;
+```
+
+---
+
+# Focus on highways
+
+```r
+highways &lt;- roads %&gt;%
+  filter(CLASS_ADM == "Autoroute")
+as.tibble(highways)
+```
+
+```
+## # A tibble: 4,506 x 13
+##    ID_RTE500 VOCATION NB_CHAUSSE NB_VOIES ETAT  ACCES RES_VERT SENS 
+##        &lt;int&gt; &lt;fct&gt;    &lt;fct&gt;      &lt;fct&gt;    &lt;fct&gt; &lt;fct&gt; &lt;fct&gt;    &lt;fct&gt;
+##  1        32 Type au… "2 chauss… Sans ob… "Rev… "A p… Apparti… Doub…
+##  2        33 Type au… "1 chauss… 2 voies… "Rev… "A p… Apparti… Doub…
+##  3      1041 Type au… "1 chauss… "1 voie… "Rev… Libre Apparti… Sens…
+##  4      2460 Type au… "2 chauss… Sans ob… "Rev… Libre N'appar… Doub…
+##  5      3074 Type au… "1 chauss… "1 voie… "Rev… Libre N'appar… Sens…
+##  6      3198 Type au… "1 chauss… "1 voie… "Rev… "A p… Apparti… Sens…
+##  7      3200 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+##  8      3201 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+##  9      3202 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+## 10      3363 Type au… "2 chauss… Sans ob… "Rev… "A p… Apparti… Doub…
+## # … with 4,496 more rows, and 5 more variables: RES_EUROPE &lt;fct&gt;,
+## #   NUM_ROUTE &lt;fct&gt;, CLASS_ADM &lt;fct&gt;, LONGUEUR &lt;dbl&gt;, geometry &lt;LINESTRING
+## #   [m]&gt;
+```
+
+---
+
+# Reproject and crop to match France extent
+
+```r
+highways &lt;- highways %&gt;% 
+  st_transform(crs = st_crs(forest)) %&gt;%
+  st_crop(st_bbox(df.france))
+as.tibble(highways)
+```
+
+```
+## # A tibble: 4,494 x 13
+##    ID_RTE500 VOCATION NB_CHAUSSE NB_VOIES ETAT  ACCES RES_VERT SENS 
+##        &lt;int&gt; &lt;fct&gt;    &lt;fct&gt;      &lt;fct&gt;    &lt;fct&gt; &lt;fct&gt; &lt;fct&gt;    &lt;fct&gt;
+##  1        32 Type au… "2 chauss… Sans ob… "Rev… "A p… Apparti… Doub…
+##  2        33 Type au… "1 chauss… 2 voies… "Rev… "A p… Apparti… Doub…
+##  3      1041 Type au… "1 chauss… "1 voie… "Rev… Libre Apparti… Sens…
+##  4      2460 Type au… "2 chauss… Sans ob… "Rev… Libre N'appar… Doub…
+##  5      3074 Type au… "1 chauss… "1 voie… "Rev… Libre N'appar… Sens…
+##  6      3198 Type au… "1 chauss… "1 voie… "Rev… "A p… Apparti… Sens…
+##  7      3200 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+##  8      3201 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+##  9      3202 Type au… "2 chauss… Sans ob… "Rev… Libre Apparti… Doub…
+## 10      3363 Type au… "2 chauss… Sans ob… "Rev… "A p… Apparti… Doub…
+## # … with 4,484 more rows, and 5 more variables: RES_EUROPE &lt;fct&gt;,
+## #   NUM_ROUTE &lt;fct&gt;, CLASS_ADM &lt;fct&gt;, LONGUEUR &lt;dbl&gt;, geometry &lt;LINESTRING
+## #   [m]&gt;
+```
+
+---
+
+# Get centroids of each monitoring sites
+
+```r
+centroids &lt;- covariates %&gt;% 
+  st_centroid()
+as.tibble(centroids)
+```
+
+```
+## # A tibble: 138 x 13
+##    bearpresence idsite area  areakm2 bigsites areaforest forestcover humpop
+##    &lt;fct&gt;         &lt;dbl&gt; &lt;S3:&gt; &lt;S3: u&gt;    &lt;dbl&gt; &lt;S3: unit&gt; &lt;S3: units&gt;  &lt;dbl&gt;
+##  1 Absence      640101  796…  79.61…       NA 42105194 … 0.5288340 …   1253
+##  2 Absence      640102 1221… 122.15…       NA 60136750 … 0.4922979 …   2001
+##  3 Occasionnel… 640203  640…  64.01…       NA 26652318 … 0.4163604 …    641
+##  4 Occasionnel… 640204  362…  36.20…       NA 21003797 … 0.5800784 …   1877
+##  5 Absence      640202  679…  67.90…       NA 42325894 … 0.6233153 …   2066
+##  6 Absence      640201  584…  58.45…       NA 22478565 … 0.3845390 …   3983
+##  7 Absence      640301  303…  30.31…       NA 13955020 … 0.4604001 …   1782
+##  8 Absence      640302  258…  25.86…       NA 19648844 … 0.7596186 …   1827
+##  9 Occasionnel… 640401  723…  72.32…       NA 31347244 … 0.4334448 …   2877
+## 10 Reguliere    640402  677…  67.79…       NA 21175525 … 0.3123357 …    864
+## # … with 128 more rows, and 5 more variables: humdens &lt;S3: units&gt;,
+## #   geometry.x &lt;POINT [m]&gt;, geometry.y &lt;MULTIPOLYGON [m]&gt;,
+## #   geometry.x.x &lt;GEOMETRYCOLLECTION&gt;, geometry.y.y &lt;GEOMETRY [m]&gt;
+```
+
+---
+
+# Then distance from centroids to highways
+
+```r
+dtohighways &lt;- highways %&gt;% 
+  st_distance(centroids, by_element = F)
+head(dtohighways)
+```
+
+```
+## Units: [m]
+## [1] 490490.3 515331.5 718550.3 898734.7 919059.7 679572.2
+```
+
+---
+
+# Convert distance to highways into numeric values and keep only minimal distance to highways
+
+```r
+dtohighwaysnum &lt;- matrix(as.numeric(dtohighways),
+                      nrow = nrow(dtohighways),
+                      ncol = ncol(dtohighways))
+dtohighwaysnum &lt;- apply(dtohighwaysnum,2,min)/1000
+head(dtohighwaysnum)
+```
+
+```
+## [1] 48.67387 49.63361 53.25704 50.65845 45.78141 39.89380
+```
+
+---
+
+# Map the distance to highways
+
+```r
+covariates %&gt;%
+  ggplot() +
+  geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
+  scale_fill_viridis_c(name = 'distance\n(km)',alpha = 0.7) + 
+  geom_sf(data = highways, aes(color = 'red'), show.legend = "line") +
+  scale_color_manual(values = "red", labels = "", name = "highway") +
+  coord_sf(xlim = st_bbox(covariates)[c(1,3)], 
+           ylim = st_bbox(covariates)[c(2,4)]) + # what if you turn this off?
+  labs(title = 'Distance to highways in the Pyrénées', 
+       subtitle = 'Source: Route500')
+```
+
+---
+
+# Map the distance to highways
+&lt;img src="sf_ogimenez_files/figure-html/unnamed-chunk-47-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Wrap up: Geometric calculations
+
+**Geometric operations** on vector layers can conceptually be divided into **three groups** according to their output:
+
+* **Numeric** values: Functions that summarize geometrical properties of: 
+    * A **single layer** (e.g. area, length)
+    * A **pair of layers** (e.g. distance)
+    
+* **Logical** values: Functions that evaluate whether a certain condition holds true, regarding:
+    * A **single layer** (e.g. geometry is valid) 
+    * A **pair of layers** (e.g. feature A intersects feature B)
+    
+* **Spatial** layers: Functions that create a new layer based on: 
+    * A **single layer** (e.g. centroids) 
+    * A **pair of layers** (e.g. intersection area)
+
+---
+
+## Numeric
+
+* Several functions to calculate **numeric geometric properties** of vector layers: 
+    * `st_length`
+    * `st_area`
+    * `st_distance`
+    * `st_bbox`
+    * ...
+
+---
+
+## Logical
+
+* Given two layers, `x` and `y`, the following **logical geometric functions** check whether each feature in `x` maintains the specified **relation** with each feature in `y`:
+    * `st_intersects`
+    * `st_disjoint`
+    * `st_touches`
+    * `st_crosses`
+    * `st_within`
+    * `st_contains`
+    * `st_overlaps`
+    * `st_covers`
+    * `st_equals`
+    * ...
+
+---
+
+## Spatial
+
+* Common **geometry-generating** functions applicable to **individual** geometries:
+    * `st_centroid`
+    * `st_buffer`
+    * `st_union`
+    * `st_sample`
+    * `st_convex_hull`
+    * `st_voronoi`
+    * ...
+    
+    
+    
+---
+
+## All `sf` methods
+
+
+```
+##  [1] [                     [[&lt;-                  $&lt;-                  
+##  [4] aggregate             anti_join             arrange              
+##  [7] as.data.frame         cbind                 coerce               
+## [10] dbDataType            dbWriteTable          distinct             
+## [13] filter                full_join             gather               
+## [16] group_by              identify              initialize           
+## [19] inner_join            left_join             merge                
+## [22] mutate                nest                  plot                 
+## [25] print                 rbind                 rename               
+## [28] right_join            sample_frac           sample_n             
+## [31] select                semi_join             separate             
+## [34] show                  slice                 slotsFromS3          
+## [37] spread                st_agr                st_agr&lt;-             
+## [40] st_area               st_as_sf              st_bbox              
+## [43] st_boundary           st_buffer             st_cast              
+## [46] st_centroid           st_collection_extract st_convex_hull       
+## [49] st_coordinates        st_crop               st_crs               
+## [52] st_crs&lt;-              st_difference         st_geometry          
+## [55] st_geometry&lt;-         st_intersection       st_is                
+## [58] st_line_merge         st_nearest_points     st_node              
+## [61] st_point_on_surface   st_polygonize         st_precision         
+## [64] st_segmentize         st_set_precision      st_simplify          
+## [67] st_snap               st_sym_difference     st_transform         
+## [70] st_triangulate        st_union              st_voronoi           
+## [73] st_wrap_dateline      st_write              st_zm                
+## [76] summarise             transmute             ungroup              
+## [79] unite                 unnest               
+## see '?methods' for accessing help and source code
+```
+
+
+---
+
+# To dive even deeper into sf
+
+* Detailed sf package [vignettes](https://r-spatial.github.io/sf/articles/)
+
+* Blog posts: [here](https://www.r-spatial.org/r/2016/02/15/simple-features-for-r.html), [here](https://www.r-spatial.org/r/2016/07/18/sf2.html), [here](https://www.r-spatial.org/r/2016/11/02/sfcran.html), [here](https://www.r-spatial.org/r/2017/01/12/newssf.html), [here](http://strimas.com/r/tidy-sf/) and [there](https://statnmap.com/fr/2018-07-14-initiation-a-la-cartographie-avec-sf-et-compagnie/) (in French)
+
+* Video of Edzer Pebesma at [rstudio::conf 2018](https://www.rstudio.com/resources/videos/tidy-spatial-data-analysis/)
+
+* [wiki page](https://github.com/r-spatial/sf/wiki/Migrating) describing sp-sf migration
+
+* Awesome online book [Geocomputation with R](https://geocompr.robinlovelace.net/) by Lovelace, Nowosad and Muenchow
+
+&lt;img src="lovelacebookcover.png" width="150px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
+
+&lt;img src="sf_Page_1.png" width="600px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
+
+&lt;img src="sf_Page_2.png" width="600px" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Miscellaneous
+
+* What about raster data? Check out package [**star**](https://r-spatial.github.io/stars/)
+
+* `mapview::mapview()` creates interactive maps in html pages, using package `leaflet`, very useful to inspect spatial data (see also package `tmap`) 
+
+
+```r
+mapview::mapview(studysites)
+```
+&lt;img src="mapview.png" width="400px" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The `sf` 📦 has a bright future ahead 😄 😎
+
+&lt;blockquote class="twitter-tweet" data-lang="fr"&gt;&lt;p lang="en" dir="ltr"&gt;just more than tripled the speed of geom_sf... in case anyone is interested in spatial plotting...&lt;/p&gt;&amp;mdash; Thomas Lin Pedersen (@thomasp85) &lt;a href="https://twitter.com/thomasp85/status/1092412825899810817?ref_src=twsrc%5Etfw"&gt;4 février 2019&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+
+---
+class: title-slide-final, middle
+background-size: 55px
+background-position: 9% 15%
+
+# Thanks!
+
+### I created these slides with [xaringan](https://github.com/yihui/xaringan) and [RMarkdown](https://rmarkdown.rstudio.com/) using the [rutgers css](https://github.com/jvcasillas/ru_xaringan) that I slightly modified.
+
+### Credits: I used material from @StrimasMackey, @jafflerbach, @StatnMap, @SharpSightLabs and @edzerpebesma 
+
+
+|                                                                                                            |                                   |
+| :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
+| <i class="fas  fa-envelope "></i> | **olivier.gimenez@cefe.cnrs.fr**       |
+| <i class="fas  fa-home "></i> | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
+| <i class="fab  fa-twitter "></i> | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
+| <i class="fab  fa-github "></i> | [**@oliviergimenez**](https://github.com/oliviergimenez)
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
