@@ -1,6 +1,6 @@
 # Introduction to GIS and mapping in R using the `sf` package
 
-In this repo, you will find the slides of my introduction to GIS and mapping in R using the `sf` package. The presentation is available [here](https://oliviergimenez.github.io/introspatialR/).
+In this repo, you will find the slides of my introduction to GIS and mapping in R using the `sf` package. The presentation is available [here](https://oliviergimenez.github.io/intro_spatialR/).
 
 To reproduce the slides, you may clone or download the repo, then just open the Rmd file and Knit it :smiley: 
 
