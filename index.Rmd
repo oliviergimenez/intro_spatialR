@@ -6,10 +6,7 @@ date: "2020-10-30"
 output:
   xaringan::moon_reader:
     css: ["css/rutgers-tidyverse.css","css/rutgers-fonts_og.css"]
-    lib_dir: "libs/"
-    seal: true
-    yolo: false
-    self_contained: false
+    lib_dir: libs
     nature:
       highlightStyle: github
       highlightLines: true
@@ -426,7 +423,8 @@ covariates %>%
 # Interactive map with `mapview`
 ## More info [here](https://r-spatial.github.io/mapview/)
 
-```{r, fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE}
+```{r}
+# ```{r, fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE}
 library(mapview)
 covariates %>% mapview(zcol = "bearpresence") #<<
 ```
