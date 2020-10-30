@@ -426,7 +426,7 @@ covariates %>%
 # Interactive map with `mapview`
 ## More info [here](https://r-spatial.github.io/mapview/)
 
-```{r, fig.align="center", fig.width=6, fig.height=6, out.width="100%", warning=FALSE}
+```{r, fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE}
 library(mapview)
 covariates %>% mapview(zcol = "bearpresence") #<<
 ```
@@ -434,11 +434,12 @@ covariates %>% mapview(zcol = "bearpresence") #<<
 ---
 
 # Interactive map with `mapview`
-```{r, fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE}
+```{r, fig.align="center", fig.width=4, fig.height=4, out.width="100%", warning=FALSE}
 covariates %>% 
   mutate(forestcover = as.numeric(forestcover)) %>% 
   mapview(zcol = "forestcover", map.types = "OpenTopoMap") #<<
-# map.types = "CartoDB.Positron", " CartoDB.DarkMatter", " OpenStreetMap", " Esri.WorldImagery", "OpenTopoMap"
+# map.types = "CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", 
+# "Esri.WorldImagery"
 ```
 
 
