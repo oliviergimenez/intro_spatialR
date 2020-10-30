@@ -427,16 +427,15 @@ covariates %>%
 ```{r}
 # ```{r, fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE}
 library(mapview)
-covariates %>% mapview(zcol = "bearpresence") #<<
+mapview(covariates, zcol = "bearpresence") #<<
 ```
 
 ---
 
 # Interactive map with `mapview`
 ```{r}
-covariates %>% 
-  mutate(forestcover = as.numeric(forestcover)) %>% 
-  mapview(zcol = "forestcover", map.types = "OpenTopoMap") #<<
+covariates <- covariates %>% mutate(forestcover = as.numeric(forestcover))
+mapview(covariates, zcol = "forestcover", map.types = "OpenTopoMap") #<<
 # map.types = "CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", 
 # "Esri.WorldImagery"
 ```
