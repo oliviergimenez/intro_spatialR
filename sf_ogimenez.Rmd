@@ -2,37 +2,43 @@
 title: "GIS and mapping in R"
 subtitle: "Introduction to the sf package"
 author: "Olivier Gimenez"
-date: "2019-02-08"
+date: "2020-10-30"
 output:
   xaringan::moon_reader:
-    css: ["rutgers-tidyverse.css","rutgers-fonts_og.css"]
+    css: ["css/rutgers-tidyverse.css","css/rutgers-fonts_og.css"]
     lib_dir: libs
     nature:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
-# to convert html output into pdf, 
-# xaringan::decktape("file://.../filename.html", "filename.pdf", docker = FALSE)
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(fig.align = "center", message=FALSE, warning=FALSE, paged.print=FALSE)
+knitr::opts_chunk$set(fig.align = "center", 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      paged.print = FALSE,
+                      cache = FALSE)
 ```
 
 
 # Simple Features for R: the sf package
 
-```{r echo=FALSE, out.width = "700px"}
-knitr::include_graphics("sfcartoon.jpg")
+```{r echo = FALSE, out.width = "700px"}
+knitr::include_graphics("img/sfcartoon.jpg")
 ```
 
 ---
+class: inverse, middle, center
+# Introduction
+---
+
 
 # What's so nice about `sf`?
 
 * Easy to work with spatial data because the distinction between spatial data and other forms of data is minimized
 
-* Spatial objects are stored as **data frames**, with the feature geometries stored in list-columns
+* Spatial objects are stored as **dataframes**, with the feature geometries stored in list-columns
 
 * This is similar to the way that **spatial databases** are structured
 
@@ -45,7 +51,7 @@ knitr::include_graphics("sfcartoon.jpg")
 * `ggplot2` is able to plot `sf` objects directly
 
 ```{r echo=FALSE, out.width = "100px"}
-knitr::include_graphics("animatedsf.gif")
+knitr::include_graphics("img/animatedsf.gif")
 ```
 
 
@@ -70,7 +76,7 @@ theme_set(theme_minimal()) # set ggplot theme
     * In blue, **sfg** - Geometry of individual [simple feature](https://en.wikipedia.org/wiki/Simple_Features)
 
 ```{r, echo=FALSE}
-knitr::include_graphics("sf_xfig.png")
+knitr::include_graphics("img/sf_xfig.png")
 ```
 
 
@@ -80,17 +86,17 @@ knitr::include_graphics("sf_xfig.png")
 
 ```{r echo=FALSE, dpi = 300, out.width = "550px", fig.align='center',warning=FALSE}
 # knitr::include_graphics("images/simple_feature_types.png")
-point = st_as_sfc("POINT (30 10)")[[1]]
-linestring = st_as_sfc("LINESTRING (30 10, 10 30, 40 40)")[[1]]
-polygon = st_as_sfc("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),(20 30, 35 35, 30 20, 20 30))")[[1]]
-multipoint = st_as_sfc("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")[[1]]
-multilinestring = st_as_sfc("MULTILINESTRING ((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))")[[1]]
-multipolygon = st_as_sfc("MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))")[[1]]
-geometrycollection = st_as_sfc("GEOMETRYCOLLECTION (POLYGON((30 20, 45 40, 10 40, 30 20)),LINESTRING (10 10, 20 20, 10 30),POINT (40 20))")[[1]]
-pol = st_as_sfc("POLYGON((30 20, 45 40, 10 40, 30 20))")[[1]]
-l = st_as_sfc("LINESTRING (10 10, 20 20, 10 30)")[[1]]
-p = st_as_sfc("POINT (40 20)")[[1]]
-opar = par()
+point <- st_as_sfc("POINT (30 10)")[[1]]
+linestring <- st_as_sfc("LINESTRING (30 10, 10 30, 40 40)")[[1]]
+polygon <- st_as_sfc("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),(20 30, 35 35, 30 20, 20 30))")[[1]]
+multipoint <- st_as_sfc("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")[[1]]
+multilinestring <- st_as_sfc("MULTILINESTRING ((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))")[[1]]
+multipolygon <- st_as_sfc("MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))")[[1]]
+geometrycollection <- st_as_sfc("GEOMETRYCOLLECTION (POLYGON((30 20, 45 40, 10 40, 30 20)),LINESTRING (10 10, 20 20, 10 30),POINT (40 20))")[[1]]
+pol <- st_as_sfc("POLYGON((30 20, 45 40, 10 40, 30 20))")[[1]]
+l <- st_as_sfc("LINESTRING (10 10, 20 20, 10 30)")[[1]]
+p <- st_as_sfc("POINT (40 20)")[[1]]
+opar <- par()
 par(mfrow = c(2, 4), mar = c(1,1,1,1))
 plot(point, main = "POINT", col = "blue", cex = 1.8, lwd = 2)
 plot(linestring, main = "LINESTRING", col = "blue", lwd = 2)
@@ -108,11 +114,15 @@ par(opar)
 
 
 ---
+class: inverse, middle, center
+# First steps
+---
+
 
 # Case study
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "800px", fig.align = "center"}
-knitr::include_graphics("oryxpaper.png")
+knitr::include_graphics("img/oryxpaper.png")
 ```
 
 ---
@@ -120,7 +130,7 @@ knitr::include_graphics("oryxpaper.png")
 # Read in spatial data
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
-studysites_raw <- st_read("bearpyrenees.shp")
+studysites_raw <- st_read("shp/bearpyrenees.shp")
 ```
 
 ---
@@ -146,8 +156,8 @@ studysites_raw
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites <- studysites_raw %>%
-  select('bearpresence' = pres_08_12,
-         'idsite' = Numero)
+  select('bearpresence' = pres_08_12, #<<
+         'idsite' = Numero) #<<
 studysites
 ```
 
@@ -157,8 +167,8 @@ studysites
 
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
 studysites %>%
-  ggplot() +
-  geom_sf() +
+  ggplot() + #<<
+  geom_sf() + #<<
   labs(title = 'Brown bear monitoring sites in the French Pyrenees mountains',
        subtitle = 'Source: French Game and Wildlife Agency')
 ```
@@ -175,10 +185,24 @@ studysites %>%
        subtitle = 'Source: French Game and Wildlife Agency')
 ```
 
-
 ---
 
 # Where did the species occur?
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+studysites %>%
+  ggplot() +
+  geom_sf(aes(fill = bearpresence)) + 
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Game and Wildlife Agency',
+       fill = "Presence") #<<
+```
+
+
+
+---
+
+# Take control of your legends
 
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
 studysites %>%
@@ -191,6 +215,9 @@ studysites %>%
                     labels = c("Absent", "Occasional", "Regular")) #<<
 ```
 
+---
+class: inverse, middle, center
+# Spatial operations: transform, crop, intersect, join
 ---
 
 # Forest cover
@@ -208,7 +235,7 @@ studysites %>%
 # Read in data
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
-clc2012 <- st_read("CLC12_FR_RGF.shp")
+clc2012 <- st_read("shp/CLC12_FR_RGF.shp")
 ```
 
 ---
@@ -242,7 +269,7 @@ studysites
 # Calculate area of each site
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites %>% 
-  mutate(area = st_area(.))
+  mutate(area = st_area(.), .before = 1)
 ```
 
 ---
@@ -250,19 +277,35 @@ studysites %>%
 # Convert area in km<sup>2</sup>
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites %>% 
-  mutate(area = st_area(.),
+  mutate(.before = 1,
+         area = st_area(.),
          areakm2 = units::set_units(area, km^2)) #<<
 ```
+
 ---
 
-# Define big sites (area > 200 km<sup>2</sup>)
+# Define big sites (area > 300 km<sup>2</sup>)
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites <- studysites %>% 
-  mutate(area = st_area(.),
+  mutate(.before = 1,
+         area = st_area(.),
          areakm2 = units::set_units(area, km^2),
-         bigsites = ifelse(as.numeric(areakm2) > 200, areakm2, NA)) #<<
+         bigsites = ifelse(as.numeric(areakm2) > 300, areakm2, NA)) #<<
 studysites
 ```
+
+```{r}
+# st_is_valid(studysites)
+studysites <- st_make_valid(studysites)
+```
+
+---
+
+# Sort by big sites
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+studysites %>% DT::datatable()
+```
+
 
 ---
 
@@ -271,11 +314,11 @@ studysites
 studysites %>%
   ggplot() + 
   geom_sf() +
-  ggsflabel::geom_sf_label_repel(aes(label = bigsites)) + #<<
+  geom_sf_label(aes(label = round(bigsites))) + #<<
   labs(title = 'Brown bear big monitoring sites in the French Pyrenees mountains',
-       subtitle = 'Big sites have area > 200km2',
-       caption = 'Data from: French Game and Wildlife Agency') +
-  xlab("") + ylab("")
+       subtitle = 'Big sites have area > 300km2',
+       caption = 'Data from: French Game and Wildlife Agency',
+       x = "", y = "")
 ```
 
 ---
@@ -328,7 +371,7 @@ forestpyrenees
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 studysites %>% 
   inner_join(forestpyrenees, by = 'idsite') %>% #<<
-  as.tibble()
+  as_tibble()
 ```
 
 ---
@@ -336,9 +379,10 @@ studysites %>%
 # Calculate forest cover
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 covariates <- studysites %>% 
-  inner_join(forestpyrenees, by = 'idsite') %>% #<<
-  mutate(forestcover = areaforest / area)
-as.tibble(covariates)
+  inner_join(forestpyrenees, by = 'idsite') %>% 
+  mutate(.before = 1,
+         forestcover = areaforest / area) #<<
+as_tibble(covariates)
 ```
 
 
@@ -352,10 +396,28 @@ covariates %>%
   geom_sf(lwd = 0.1) +
   scale_fill_viridis_c(
     labels = scales::percent_format(), # format percentage
-    name = 'forest cover',
+    name = 'Cover',
     alpha = 0.7) +  # control transparency
   labs(title = 'Map of forest cover in the Pyrenees mountains',
        subtitle = 'Source: Corine Land Cover 2012')
+```
+
+
+---
+
+# Interactive map with `mapview`
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
+library(mapview)
+covariates %>%
+  mapview(zcol = "geometry")
+  mutate(forestcover = as.numeric(forestcover)) %>%
+  mapview(zcol = "forestcover")
+  scale_fill_viridis_c(
+    labels = scales::percent_format(), # format percentage
+    name = 'Cover',
+    alpha = 0.7) +  # control transparency
+  labs(title = 'Map of forest cover in the Pyrenees mountains',
+       subtitle = 'Source: Corine Land Cover 2012') %>%
 ```
 
 ---
@@ -417,7 +479,7 @@ df.france$population %>%
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 df.france <- df.france %>% 
   mutate(density = population/superficie*100)
-as.tibble(df.france)
+as_tibble(df.france)
 ```
 
 ---
@@ -450,7 +512,7 @@ df.pyrenees
 covariates <- covariates %>% 
   inner_join(df.pyrenees,by='idsite') %>%
   mutate(humdens = humpop / (area/1000000))
-as.tibble(covariates)
+as_tibble(covariates)
 ```
 
 ---
@@ -484,6 +546,10 @@ covariates %>%
 ```
 
 ---
+class: inverse, middle, center
+# Spatial operations: distance
+---
+
 
 # Distance to highways
 
@@ -495,14 +561,14 @@ covariates %>%
 
 # Read in data
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
-roads <- st_read("TRONCON_ROUTE.shp")
+roads <- st_read("shp/TRONCON_ROUTE.shp")
 ```
 
 ---
 
 # Read in data
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-as.tibble(roads)
+as_tibble(roads)
 ```
 
 ---
@@ -667,7 +733,7 @@ methods(class='sf')
 * Awesome online book [Geocomputation with R](https://geocompr.robinlovelace.net/) by Lovelace, Nowosad and Muenchow
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "150px", fig.align = "center"}
-knitr::include_graphics("lovelacebookcover.png")
+knitr::include_graphics("img/lovelacebookcover.png")
 ```
 
 ---
@@ -675,7 +741,7 @@ knitr::include_graphics("lovelacebookcover.png")
 # The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"}
-knitr::include_graphics("sf_Page_1.png")
+knitr::include_graphics("img/sf_Page_1.png")
 ```
 
 ---
@@ -683,7 +749,7 @@ knitr::include_graphics("sf_Page_1.png")
 # The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"}
-knitr::include_graphics("sf_Page_2.png")
+knitr::include_graphics("img/sf_Page_2.png")
 ```
 
 ---
@@ -698,7 +764,7 @@ knitr::include_graphics("sf_Page_2.png")
 mapview::mapview(studysites)
 ```
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "400px", fig.align = "center"}
-knitr::include_graphics("mapview.png")
+knitr::include_graphics("img/mapview.png")
 ```
 
 ---
