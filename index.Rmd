@@ -296,7 +296,7 @@ studysites
 
 ```{r}
 # st_is_valid(studysites)
-studysites <- st_make_valid(studysites)
+studysites <- st_make_valid(studysites) %>% st_cast()
 ```
 
 ---
@@ -360,18 +360,19 @@ forestpyrenees <- forest %>%
   st_intersection(studysites) %>%
   mutate(area = st_area(.)) %>%
   group_by(idsite) %>% # groups a data frame by variables #<< 
-  summarise(areaforest = sum(area)) %>%  # perform group-wise summaries #<<
-  as_tibble()
+  summarise(areaforest = sum(area)) %>% # perform group-wise summaries #<<
+  as_tibble() %>%
+  select(-geometry)
 forestpyrenees
 ```
 
 ---
 
-# Join `sf` and `tibble` objects
+# Join `sf` and `tibble` objects 
+## More [here](https://r-spatial.github.io/sf/reference/tidyverse.html)
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 studysites %>% 
-  inner_join(forestpyrenees, by = 'idsite') %>% #<<
-  as_tibble()
+  inner_join(forestpyrenees, by = 'idsite') #<<
 ```
 
 ---
@@ -382,7 +383,6 @@ covariates <- studysites %>%
   inner_join(forestpyrenees, by = 'idsite') %>% 
   mutate(.before = 1,
          forestcover = areaforest / area) #<<
-as_tibble(covariates)
 ```
 
 
@@ -408,8 +408,12 @@ covariates %>%
 # Interactive map with `mapview`
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
 library(mapview)
-covariates %>%
-  mapview(zcol = "geometry")
+covariates %>% mutate(bearpresence = as_factor(bearpresence)) %>% mapview(alpha = 1, zcol = "bearpresence")
+
+covariates %>% mutate(forestcover = as.numeric(forestcover))%>% mapview(alpha = 1, zcol = "forestcover")
+
+
+#  mapview(zcol = "geometry")
   mutate(forestcover = as.numeric(forestcover)) %>%
   mapview(zcol = "forestcover")
   scale_fill_viridis_c(
