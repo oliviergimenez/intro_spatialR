@@ -6,7 +6,10 @@ date: "2020-10-30"
 output:
   xaringan::moon_reader:
     css: ["css/rutgers-tidyverse.css","css/rutgers-fonts_og.css"]
-    lib_dir: libs
+    lib_dir: "libs/"
+    seal: true
+    yolo: false
+    self_contained: false
     nature:
       highlightStyle: github
       highlightLines: true
