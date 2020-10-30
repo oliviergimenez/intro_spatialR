@@ -17,8 +17,7 @@ output:
 knitr::opts_chunk$set(fig.align = "center", 
                       message = FALSE, 
                       warning = FALSE, 
-                      paged.print = FALSE,
-                      cache = FALSE)
+                      paged.print = FALSE)
 ```
 
 
@@ -129,7 +128,7 @@ knitr::include_graphics("img/oryxpaper.png")
 
 # Read in spatial data
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites_raw <- st_read("shp/bearpyrenees.shp")
 ```
 
@@ -234,7 +233,7 @@ class: inverse, middle, center
 
 # Read in data
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 clc2012 <- st_read("shp/CLC12_FR_RGF.shp")
 ```
 
@@ -251,16 +250,16 @@ clc2012
 # Extract forest codes
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest <- clc2012 %>%
-  filter(CODE_12 == 311 | CODE_12 == 312 | CODE_12 == 313)
+  filter(CODE_12 == 311 | CODE_12 == 312 | CODE_12 == 313) #<<
 forest
 ```
 
 ---
 
 # Use same coordinates system for map of the Pyrénées and forest layer
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites <- studysites %>% 
-  st_transform(crs = st_crs(forest)) 
+  st_transform(crs = st_crs(forest))  #<<
 studysites
 ```
 
@@ -269,7 +268,8 @@ studysites
 # Calculate area of each site
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites %>% 
-  mutate(area = st_area(.), .before = 1)
+  mutate(area = st_area(.), #<<
+         .before = 1)
 ```
 
 ---
@@ -303,7 +303,7 @@ studysites <- st_make_valid(studysites) %>% st_cast()
 
 # Sort by big sites
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-studysites %>% DT::datatable()
+studysites %>% DT::datatable() #<<
 ```
 
 
@@ -324,7 +324,7 @@ studysites %>%
 ---
 
 # Crop forest to match study area boundaries
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest %>% 
   st_crop(st_bbox(studysites)) %>% #<<
   as_tibble()
@@ -333,7 +333,7 @@ forest %>%
 ---
 
 # Then intersect the two layers
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest %>% 
   st_crop(st_bbox(studysites)) %>%
   st_intersection(studysites) %>% #<<
@@ -343,7 +343,7 @@ forest %>%
 ---
 
 # Get forest area for each intersected `sfg`
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest %>% 
   st_crop(st_bbox(studysites)) %>%
   st_intersection(studysites) %>%
@@ -354,7 +354,7 @@ forest %>%
 ---
 
 # Sum forest over all study sites
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forestpyrenees <- forest %>% 
   st_crop(st_bbox(studysites)) %>%
   st_intersection(studysites) %>%
@@ -370,7 +370,7 @@ forestpyrenees
 
 # Join `sf` and `tibble` objects 
 ## More info [here](https://r-spatial.github.io/sf/reference/tidyverse.html)
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 studysites %>% 
   inner_join(forestpyrenees, by = 'idsite') #<<
 ```
@@ -378,7 +378,7 @@ studysites %>%
 ---
 
 # Calculate forest cover
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 covariates <- studysites %>% 
   inner_join(forestpyrenees, by = 'idsite') %>% 
   mutate(.before = 1,
@@ -395,9 +395,9 @@ covariates %>%
   aes(fill = as.numeric(forestcover)) +
   geom_sf(lwd = 0.1) +
   scale_fill_viridis_c(
-    labels = scales::percent_format(), # format percentage
+    labels = scales::percent_format(), #<< format percentage
     name = 'Cover',
-    alpha = 0.7) +  # control transparency
+    alpha = 0.7) +  #<< control transparency
   labs(title = 'Map of forest cover in the Pyrenees mountains',
        subtitle = 'Source: Corine Land Cover 2012')
 ```
@@ -411,27 +411,30 @@ covariates %>%
   aes(fill = as.numeric(forestcover)) +
   geom_sf(lwd = 0.1) +
   scale_fill_viridis_c(
-    labels = scales::percent_format(), # format percentage
+    labels = scales::percent_format(), #<< format percentage
     name = 'Cover',
-    alpha = 0.7) +  # control transparency
+    alpha = 0.7) +  #<< control transparency
   labs(title = 'Map of forest cover in the Pyrenees mountains',
        subtitle = 'Source: Corine Land Cover 2012')
 ```
 
 ---
 
-# Interactive map with `mapview` 1/2
+# Interactive map with `mapview`
 ## More info [here](https://r-spatial.github.io/mapview/)
-```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
+
+```{r "mapview1", echo=FALSE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", fig.path="chunks/", warning=FALSE}
 library(mapview)
-covariates %>% mapview(zcol = "bearpresence")
+covariates %>% mapview(zcol = "bearpresence") #<<
 ```
 
 ---
 
-# Interactive map with `mapview` 2/2
-```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
-covariates %>% mutate(forestcover = as.numeric(forestcover)) %>% mapview(zcol = "forestcover", map.types = "OpenTopoMap") 
+# Interactive map with `mapview`
+```{r "mapview2", echo=FALSE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", fig.path="chunks/", warning=FALSE}
+covariates %>% 
+  mutate(forestcover = as.numeric(forestcover)) %>% 
+  mapview(zcol = "forestcover", map.types = "OpenTopoMap") #<<
 # map.types = "CartoDB.Positron", " CartoDB.DarkMatter", " OpenStreetMap", " Esri.WorldImagery", "OpenTopoMap"
 ```
 
@@ -450,7 +453,7 @@ covariates %>% mutate(forestcover = as.numeric(forestcover)) %>% mapview(zcol = 
 
 # Human density
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 url.france_pop <- url("https://vrzkj25a871bpq7t1ugcgmn9-wpengine.netdna-ssl.com/wp-content/datasets/france_population_data_2016.RData")
 load(url.france_pop)
 glimpse(df.france)
@@ -461,7 +464,7 @@ glimpse(df.france)
 # Transform into lower case
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 colnames(df.france) <- colnames(df.france) %>% 
-  str_to_lower()
+  str_to_lower() #<<
 colnames(df.france)
 ```
 
@@ -470,7 +473,7 @@ colnames(df.france)
 # Have a look to the distribution
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 df.france$population %>% 
-  summary()
+  summary() #<<
 ```
 
 ---
@@ -478,7 +481,7 @@ df.france$population %>%
 # Calculate density
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 df.france <- df.france %>% 
-  mutate(density = population/superficie*100)
+  mutate(density = population/superficie*100) #<<
 as_tibble(df.france)
 ```
 
@@ -494,13 +497,13 @@ df.france %>%
 ---
 
 # Sum population size over sites
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 df.pyrenees <- df.france %>% 
   st_transform(crs = st_crs(forest)) %>%
   st_crop(st_bbox(covariates)) %>%
   st_intersection(covariates) %>%
-  group_by(idsite) %>%
-  summarise(humpop = sum(population)) %>%
+  group_by(idsite) %>% #<<
+  summarise(humpop = sum(population)) %>% #<<
   as_tibble()
 df.pyrenees
 ```
@@ -508,11 +511,11 @@ df.pyrenees
 ---
 
 # Join, then calculate density
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 covariates <- covariates %>% 
-  inner_join(df.pyrenees, by = 'idsite') %>%
+  inner_join(df.pyrenees, by = 'idsite') %>% #<<
   mutate(.before = 1,
-         humdens = humpop / (area/1000000))
+         humdens = humpop / (area/1000000)) #<<
 as_tibble(covariates)
 ```
 
@@ -561,7 +564,7 @@ class: inverse, middle, center
 ---
 
 # Read in data
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 roads <- st_read("shp/TRONCON_ROUTE.shp")
 ```
 
@@ -575,37 +578,37 @@ as_tibble(roads)
 ---
 
 # Focus on highways
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 highways <- roads %>%
-  filter(CLASS_ADM == "Autoroute")
+  filter(CLASS_ADM == "Autoroute") #<<
 as_tibble(highways)
 ```
 
 ---
 
 # Reproject and crop to match France extent
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 highways <- highways %>% 
-  st_transform(crs = st_crs(forest)) %>%
-  st_crop(st_bbox(df.france))
+  st_transform(crs = st_crs(forest)) %>% #<<
+  st_crop(st_bbox(df.france)) #<<
 as_tibble(highways)
 ```
 
 ---
 
 # Get centroids of each monitoring sites
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 centroids <- covariates %>% 
-  st_centroid()
+  st_centroid() #<<
 as_tibble(centroids)
 ```
 
 ---
 
 # Then distance from centroids to highways
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 dtohighways <- highways %>% 
-  st_distance(centroids, by_element = F)
+  st_distance(centroids, by_element = F) #<<
 head(dtohighways)
 ```
 
@@ -652,7 +655,7 @@ covariates %>%
 
 ---
 class: inverse, middle, center
-# Wrapping up
+# Wrap up
 ---
 
 
@@ -733,9 +736,7 @@ class: inverse, middle, center
 
 * Detailed sf package [vignettes](https://r-spatial.github.io/sf/articles/)
 
-* Blog posts: [here](https://www.r-spatial.org/r/2016/02/15/simple-features-for-r.html), [here](https://www.r-spatial.org/r/2016/07/18/sf2.html), [here](https://www.r-spatial.org/r/2016/11/02/sfcran.html), [here](https://www.r-spatial.org/r/2017/01/12/newssf.html), [here](http://strimas.com/r/tidy-sf/) and [there](https://statnmap.com/fr/2018-07-14-initiation-a-la-cartographie-avec-sf-et-compagnie/) (in French)
-
-* Video of Edzer Pebesma at [rstudio::conf 2018](https://www.rstudio.com/resources/videos/tidy-spatial-data-analysis/)
+* Blog posts: [here](https://www.r-spatial.org/r/2016/02/15/simple-features-for-r.html), [here](https://www.r-spatial.org/r/2016/07/18/sf2.html), [here](https://www.r-spatial.org/r/2016/11/02/sfcran.html), [here](https://www.r-spatial.org/r/2017/01/12/newssf.html) and [there](https://statnmap.com/fr/2018-07-14-initiation-a-la-cartographie-avec-sf-et-compagnie/) (in French)
 
 * [wiki page](https://github.com/r-spatial/sf/wiki/Migrating) describing sp-sf migration
 
