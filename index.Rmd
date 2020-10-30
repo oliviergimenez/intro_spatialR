@@ -426,7 +426,7 @@ covariates %>%
 # Interactive map with `mapview`
 ## More info [here](https://r-spatial.github.io/mapview/)
 
-```{r "mapview1", echo=TRUE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", warning=FALSE}
+```{r, echo=TRUE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", warning=FALSE}
 library(mapview)
 covariates %>% mapview(zcol = "bearpresence") #<<
 ```
@@ -434,7 +434,7 @@ covariates %>% mapview(zcol = "bearpresence") #<<
 ---
 
 # Interactive map with `mapview`
-```{r "mapview2", echo=TRUE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", warning=FALSE}
+```{r, echo=TRUE, eval=TRUE, fig.align="center", fig.width=6, fig.height=6, out.width="100%", warning=FALSE}
 covariates %>% 
   mutate(forestcover = as.numeric(forestcover)) %>% 
   mapview(zcol = "forestcover", map.types = "OpenTopoMap") #<<
