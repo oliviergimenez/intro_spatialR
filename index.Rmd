@@ -369,7 +369,7 @@ forestpyrenees
 ---
 
 # Join `sf` and `tibble` objects 
-## More [here](https://r-spatial.github.io/sf/reference/tidyverse.html)
+## More info [here](https://r-spatial.github.io/sf/reference/tidyverse.html)
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 studysites %>% 
   inner_join(forestpyrenees, by = 'idsite') #<<
@@ -402,43 +402,39 @@ covariates %>%
        subtitle = 'Source: Corine Land Cover 2012')
 ```
 
-
----
-
-# Interactive map with `mapview`
-```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
-library(mapview)
-covariates %>% mutate(bearpresence = as_factor(bearpresence)) %>% mapview(alpha = 1, zcol = "bearpresence")
-
-covariates %>% mutate(forestcover = as.numeric(forestcover))%>% mapview(alpha = 1, zcol = "forestcover")
-
-
-#  mapview(zcol = "geometry")
-  mutate(forestcover = as.numeric(forestcover)) %>%
-  mapview(zcol = "forestcover")
-  scale_fill_viridis_c(
-    labels = scales::percent_format(), # format percentage
-    name = 'Cover',
-    alpha = 0.7) +  # control transparency
-  labs(title = 'Map of forest cover in the Pyrenees mountains',
-       subtitle = 'Source: Corine Land Cover 2012') %>%
-```
-
 ---
 
 # Map forest cover
-```{r echo=FALSE, fig.align='center', fig.dim=c(15, 7), message=FALSE, warning=FALSE, dpi = 300, paged.print=FALSE}
+```{r echo = FALSE, message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
 covariates %>%
   ggplot() +
   aes(fill = as.numeric(forestcover)) +
   geom_sf(lwd = 0.1) +
   scale_fill_viridis_c(
-    labels = scales::percent_format(),
-    name = 'forest cover',
-    alpha = 0.7) + 
+    labels = scales::percent_format(), # format percentage
+    name = 'Cover',
+    alpha = 0.7) +  # control transparency
   labs(title = 'Map of forest cover in the Pyrenees mountains',
        subtitle = 'Source: Corine Land Cover 2012')
 ```
+
+---
+
+# Interactive map with `mapview` 1/2
+## More info [here](https://r-spatial.github.io/mapview/)
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
+library(mapview)
+covariates %>% mapview(zcol = "bearpresence")
+```
+
+---
+
+# Interactive map with `mapview` 2/2
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE}
+covariates %>% mutate(forestcover = as.numeric(forestcover)) %>% mapview(zcol = "forestcover", map.types = "OpenTopoMap") 
+# map.types = "CartoDB.Positron", " CartoDB.DarkMatter", " OpenStreetMap", " Esri.WorldImagery", "OpenTopoMap"
+```
+
 
 ---
 
@@ -514,8 +510,9 @@ df.pyrenees
 # Join, then calculate density
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 covariates <- covariates %>% 
-  inner_join(df.pyrenees,by='idsite') %>%
-  mutate(humdens = humpop / (area/1000000))
+  inner_join(df.pyrenees, by = 'idsite') %>%
+  mutate(.before = 1,
+         humdens = humpop / (area/1000000))
 as_tibble(covariates)
 ```
 
@@ -581,7 +578,7 @@ as_tibble(roads)
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 highways <- roads %>%
   filter(CLASS_ADM == "Autoroute")
-as.tibble(highways)
+as_tibble(highways)
 ```
 
 ---
@@ -591,7 +588,7 @@ as.tibble(highways)
 highways <- highways %>% 
   st_transform(crs = st_crs(forest)) %>%
   st_crop(st_bbox(df.france))
-as.tibble(highways)
+as_tibble(highways)
 ```
 
 ---
@@ -600,7 +597,7 @@ as.tibble(highways)
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, cache = TRUE}
 centroids <- covariates %>% 
   st_centroid()
-as.tibble(centroids)
+as_tibble(centroids)
 ```
 
 ---
@@ -654,8 +651,12 @@ covariates %>%
 ```
 
 ---
+class: inverse, middle, center
+# Wrapping up
+---
 
-## Wrap up: Geometric calculations
+
+## Geometric calculations
 
 **Geometric operations** on vector layers can conceptually be divided into **three groups** according to their output:
 
@@ -723,6 +724,10 @@ methods(class='sf')
 
 
 ---
+class: inverse, middle, center
+# To go further
+---
+
 
 # To dive even deeper into sf
 
@@ -755,28 +760,6 @@ knitr::include_graphics("img/sf_Page_1.png")
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"}
 knitr::include_graphics("img/sf_Page_2.png")
 ```
-
----
-
-## Miscellaneous
-
-* What about raster data? Check out package [**star**](https://r-spatial.github.io/stars/)
-
-* `mapview::mapview()` creates interactive maps in html pages, using package `leaflet`, very useful to inspect spatial data (see also package `tmap`) 
-
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-mapview::mapview(studysites)
-```
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "400px", fig.align = "center"}
-knitr::include_graphics("img/mapview.png")
-```
-
----
-
-# The `sf` `r emo::ji("package")` has a bright future ahead `r emo::ji("smile")` `r emo::ji("sunglasses")`
-
-<blockquote class="twitter-tweet" data-lang="fr"><p lang="en" dir="ltr">just more than tripled the speed of geom_sf... in case anyone is interested in spatial plotting...</p>&mdash; Thomas Lin Pedersen (@thomasp85) <a href="https://twitter.com/thomasp85/status/1092412825899810817?ref_src=twsrc%5Etfw">4 février 2019</a></blockquote>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 
 ---
