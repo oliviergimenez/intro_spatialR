@@ -295,21 +295,14 @@ studysites <- studysites %>%
 studysites
 ```
 
-```{r}
+```{r include=FALSE}
 # st_is_valid(studysites)
 studysites <- st_make_valid(studysites) %>% st_cast()
 ```
 
-<!-- --- -->
-
-<!-- # Sort by big sites -->
-<!-- ```{r} -->
-<!-- studysites %>% DT::datatable() #<< -->
-<!-- ``` -->
 
 
 ---
-
 # Map again, with area on top of big sites
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
 studysites %>%
