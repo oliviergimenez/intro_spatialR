@@ -300,12 +300,12 @@ studysites
 studysites <- st_make_valid(studysites) %>% st_cast()
 ```
 
----
+<!-- --- -->
 
-# Sort by big sites
-```{r}
-studysites %>% DT::datatable() #<<
-```
+<!-- # Sort by big sites -->
+<!-- ```{r} -->
+<!-- studysites %>% DT::datatable() #<< -->
+<!-- ``` -->
 
 
 ---
