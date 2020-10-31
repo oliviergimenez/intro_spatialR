@@ -303,7 +303,7 @@ studysites <- st_make_valid(studysites) %>% st_cast()
 ---
 
 # Sort by big sites
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r}
 studysites %>% DT::datatable() #<<
 ```
 
