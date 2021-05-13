@@ -226,9 +226,9 @@ class: inverse, middle, center
 
 * We use corine land cover (CLC) data (2012 version) to get forest cover
 
-* Data can be downloaded [from the official website](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/li/2539.html)
+* Data can be downloaded [from the official website](http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/millesime/CLC12_FR_RGF_SHP.zip)
 
-* An explanation of what's in the data is available [here](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/t/nomenclature-standard.html?tx_ttnews[tt_news]=24270&cHash=2c5863bd046f51082f76794ba2355880).  
+* An explanation of what's in the data is available [here](https://www.statistiques.developpement-durable.gouv.fr/sites/default/files/2019-07/Nomenclature_CLC.pdf).  
 
 ---
 
