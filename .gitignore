@@ -2,3 +2,5 @@ data/
 doc/
 shp/
 .Rproj.user
+.Rhistory
+.DS_Store

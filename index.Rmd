@@ -251,7 +251,7 @@ clc2012
 # Extract forest codes
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest <- clc2012 %>%
-  filter(CODE_12 == 311 | CODE_12 == 312 | CODE_12 == 313) #<<
+  filter(CODE_12 == '311' | CODE_12 == '312' | CODE_12 == '313') #<<
 forest
 ```
 
