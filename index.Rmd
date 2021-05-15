@@ -666,7 +666,7 @@ random_pts <- tibble(
   lat=c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
   lon=c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
 )
-sf_pts <- st_as_sf( 
+sf_pts <- st_as_sf( #<<
   random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)  #<<
 sf_pts
 ```
@@ -709,7 +709,7 @@ result
 sf_pts <- sf_pts %>% 
   st_transform(st_crs(studysites))
 result <- st_intersects(sf_pts, studysites)
-subset_pts <- sf_pts %>%
+subset_pts <- sf_pts %>%  #<<
   add_column(nb_intersected=sapply(result,length)) %>%  #<<
   filter(nb_intersected > 0)  #<<
 ```
