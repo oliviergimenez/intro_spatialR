@@ -666,7 +666,8 @@ random_pts <- tibble(
   lat=c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
   lon=c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
 )
-sf_pts <- st_as_sf(random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)
+sf_pts <- st_as_sf( 
+  random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)  #<<
 sf_pts
 ```
 
@@ -683,7 +684,22 @@ ggplot() +
 
 ---
 
-HOWTO : subset points that intersects polygons
+# HOWTO : subset points that intersects polygons
+
+* the geometric predicate `st_intersects` tells us which polygon intersects which point
+* we need input objects with the same CRS
+* if there is no polygon intersected, the result is empty
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+sf_pts <- sf_pts %>% 
+  st_transform(st_crs(studysites))
+result <- st_intersects(sf_pts, studysites) #<<
+result
+```
+
+---
+
+# HOWTO : subset points that intersects polygons
 
 * the geometric predicate `st_intersects` tells us which polygon intersects which point
 * we need input objects with the same CRS
@@ -693,10 +709,9 @@ HOWTO : subset points that intersects polygons
 sf_pts <- sf_pts %>% 
   st_transform(st_crs(studysites))
 result <- st_intersects(sf_pts, studysites)
-result
 subset_pts <- sf_pts %>%
-  add_column(nb_intersected=sapply(result,length)) %>%
-  filter(nb_intersected > 0)
+  add_column(nb_intersected=sapply(result,length)) %>%  #<<
+  filter(nb_intersected > 0)  #<<
 ```
 
 ---
@@ -711,12 +726,14 @@ ggplot() +
   labs(title = 'Monitoring sites and random points')
 ```
 
+---
+
 # HOW TO : Make grid
 
 * Let's create an hexagonal grid with 10 km cells covering the studysites area
 
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
-hex_grid <- st_make_grid(studysites, cellsize=10000, square=FALSE)
+hex_grid <- st_make_grid(studysites, cellsize=10000, square=FALSE)  #<<
 ggplot() +
   geom_sf(data=studysites, color=NA, fill="blue", alpha=0.4) + 
   geom_sf(data=hex_grid, fill=NA, lwd=0.2) +
@@ -848,8 +865,8 @@ background-position: 9% 15%
 
 |                                                                                                            |                                   |
 | :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
-| `r icon::fa("envelope")` | **olivier.gimenez@cefe.cnrs.fr**       |
-| `r icon::fa("home")` | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
-| `r icon::fa_twitter()` | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
-| `r icon::fa_github()` | [**@oliviergimenez**](https://github.com/oliviergimenez)
+| `r icons::fontawesome("envelope")` | **olivier.gimenez@cefe.cnrs.fr**       |
+| `r icons::fontawesome("home")` | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
+| `r icons::fontawesome("twitter")` | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
+| `r icons::fontawesome("github")` | [**@oliviergimenez**](https://github.com/oliviergimenez)
 
