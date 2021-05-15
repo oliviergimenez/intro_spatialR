@@ -495,9 +495,9 @@ df.pyrenees <- df.france %>%
   st_transform(crs = st_crs(forest)) %>%
   st_crop(st_bbox(covariates)) %>%
   st_intersection(covariates) %>%
+  st_set_geometry(NULL) %>%
   group_by(idsite) %>% #<<
-  summarise(humpop = sum(population)) %>% #<<
-  as_tibble()
+  summarise(humpop = sum(population)) #<<
 df.pyrenees
 ```
 
