@@ -609,10 +609,11 @@ head(dtohighways)
 
 # Convert distance to highways into numeric values and keep only minimal distance to highways
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+units(dtohighways) <- units::as_units("km")
 dtohighwaysnum <- matrix(as.numeric(dtohighways),
                       nrow = nrow(dtohighways),
                       ncol = ncol(dtohighways))
-dtohighwaysnum <- apply(dtohighwaysnum,2,min)/1000
+dtohighwaysnum <- apply(dtohighwaysnum,2,min)
 head(dtohighwaysnum)
 ```
 
@@ -620,6 +621,8 @@ head(dtohighwaysnum)
 
 # Map the distance to highways
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, eval = FALSE}
+covariates <- covariates %>%
+  add_column(dtohighwaysnum)
 covariates %>%
   ggplot() +
   geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
