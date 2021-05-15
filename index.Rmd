@@ -441,15 +441,14 @@ mapview(covariates, zcol = "forestcover", map.types = "OpenTopoMap") #<<
 
 * We use data on population size of cities in France
 
-* A more detailed analysis of human density in France is available from @SharpSightLabs  [here](https://www.sharpsightlabs.com/blog/mapping-france-night/)  
+* Population data is available from **IGN Admin-Express** database   [here](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#admin-express)  
 
 ---
 
 # Human density
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-url.france_pop <- url("https://vrzkj25a871bpq7t1ugcgmn9-wpengine.netdna-ssl.com/wp-content/datasets/france_population_data_2016.RData")
-load(url.france_pop)
+load("shp/france_population_data_2016.RData")
 glimpse(df.france)
 ```
 
@@ -525,7 +524,7 @@ covariates %>%
     name = bquote('Density\n(people per km'^2*')'),
     alpha = 0.7) + 
   labs(title = 'Human population density',
-       subtitle = 'Source: https://www.sharpsightlabs.com/blog/mapping-france-night/')
+       subtitle = 'Source: IGN GEOFLA 2016')
 ```
 
 ---
@@ -540,7 +539,7 @@ covariates %>%
     name = bquote('Density\n(people per km'^2*')'),
     alpha = 0.7) + 
   labs(title = 'Human population density',
-       subtitle = 'Source: https://www.sharpsightlabs.com/blog/mapping-france-night/')
+       subtitle = 'Source: Source: IGN GEOFLA 2016')
 ```
 
 ---
@@ -553,7 +552,7 @@ class: inverse, middle, center
 
 * Distance to highways might be a driver of brown bear distribution
 
-* We use data from [Route500 database](http://professionnels.ign.fr/route500#tab-3)
+* We use data from [Route500 database](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#route-500)
 
 ---
 
