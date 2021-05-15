@@ -711,6 +711,19 @@ ggplot() +
   labs(title = 'Monitoring sites and random points')
 ```
 
+# HOW TO : Make grid
+
+* Let's create an hexagonal grid with 10 km cells covering the studysites area
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+hex_grid <- st_make_grid(studysites, cellsize=10000, square=FALSE)
+ggplot() +
+  geom_sf(data=studysites, color=NA, fill="blue", alpha=0.4) + 
+  geom_sf(data=hex_grid, fill=NA, lwd=0.2) +
+  labs(title = 'Making hexagonal grid')
+
+```
+
 ---
 class: inverse, middle, center
 # Wrap up
