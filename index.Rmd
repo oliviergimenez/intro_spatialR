@@ -226,9 +226,9 @@ class: inverse, middle, center
 
 * We use corine land cover (CLC) data (2012 version) to get forest cover
 
-* Data can be downloaded [from the official website](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/li/2539.html)
+* Data can be downloaded [from the official website](http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/millesime/CLC12_FR_RGF_SHP.zip)
 
-* An explanation of what's in the data is available [here](http://www.statistiques.developpement-durable.gouv.fr/donnees-ligne/t/nomenclature-standard.html?tx_ttnews[tt_news]=24270&cHash=2c5863bd046f51082f76794ba2355880).  
+* An explanation of what's in the data is available [here](https://www.statistiques.developpement-durable.gouv.fr/sites/default/files/2019-07/Nomenclature_CLC.pdf).  
 
 ---
 
@@ -251,7 +251,7 @@ clc2012
 # Extract forest codes
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 forest <- clc2012 %>%
-  filter(CODE_12 == 311 | CODE_12 == 312 | CODE_12 == 313) #<<
+  filter(CODE_12 == '311' | CODE_12 == '312' | CODE_12 == '313') #<<
 forest
 ```
 
@@ -441,15 +441,14 @@ mapview(covariates, zcol = "forestcover", map.types = "OpenTopoMap") #<<
 
 * We use data on population size of cities in France
 
-* A more detailed analysis of human density in France is available from @SharpSightLabs  [here](https://www.sharpsightlabs.com/blog/mapping-france-night/)  
+* Population data is available from **IGN Admin-Express** database   [here](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#admin-express)  
 
 ---
 
 # Human density
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-url.france_pop <- url("https://vrzkj25a871bpq7t1ugcgmn9-wpengine.netdna-ssl.com/wp-content/datasets/france_population_data_2016.RData")
-load(url.france_pop)
+load("shp/france_population_data_2016.RData")
 glimpse(df.france)
 ```
 
@@ -496,9 +495,9 @@ df.pyrenees <- df.france %>%
   st_transform(crs = st_crs(forest)) %>%
   st_crop(st_bbox(covariates)) %>%
   st_intersection(covariates) %>%
+  st_set_geometry(NULL) %>%
   group_by(idsite) %>% #<<
-  summarise(humpop = sum(population)) %>% #<<
-  as_tibble()
+  summarise(humpop = sum(population)) #<<
 df.pyrenees
 ```
 
@@ -525,7 +524,7 @@ covariates %>%
     name = bquote('Density\n(people per km'^2*')'),
     alpha = 0.7) + 
   labs(title = 'Human population density',
-       subtitle = 'Source: https://www.sharpsightlabs.com/blog/mapping-france-night/')
+       subtitle = 'Source: IGN GEOFLA 2016')
 ```
 
 ---
@@ -540,7 +539,7 @@ covariates %>%
     name = bquote('Density\n(people per km'^2*')'),
     alpha = 0.7) + 
   labs(title = 'Human population density',
-       subtitle = 'Source: https://www.sharpsightlabs.com/blog/mapping-france-night/')
+       subtitle = 'Source: Source: IGN GEOFLA 2016')
 ```
 
 ---
@@ -553,7 +552,7 @@ class: inverse, middle, center
 
 * Distance to highways might be a driver of brown bear distribution
 
-* We use data from [Route500 database](http://professionnels.ign.fr/route500#tab-3)
+* We use data from [Route500 database](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#route-500)
 
 ---
 
@@ -610,10 +609,11 @@ head(dtohighways)
 
 # Convert distance to highways into numeric values and keep only minimal distance to highways
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+units(dtohighways) <- units::as_units("km")
 dtohighwaysnum <- matrix(as.numeric(dtohighways),
                       nrow = nrow(dtohighways),
                       ncol = ncol(dtohighways))
-dtohighwaysnum <- apply(dtohighwaysnum,2,min)/1000
+dtohighwaysnum <- apply(dtohighwaysnum,2,min)
 head(dtohighwaysnum)
 ```
 
@@ -621,6 +621,8 @@ head(dtohighwaysnum)
 
 # Map the distance to highways
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, eval = FALSE}
+covariates <- covariates %>%
+  add_column(dtohighwaysnum)
 covariates %>%
   ggplot() +
   geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
@@ -637,6 +639,8 @@ covariates %>%
 
 # Map the distance to highways
 ```{r echo=FALSE, fig.align='center', fig.dim=c(15, 7), message=FALSE, warning=FALSE, dpi = 300, paged.print=FALSE}
+covariates <- covariates %>%
+  add_column(dtohighwaysnum)
 covariates %>%
   ggplot() +
   geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
@@ -645,6 +649,96 @@ covariates %>%
   scale_color_manual(values = "red", labels = "", name = "highway") +
   coord_sf(xlim = st_bbox(covariates)[c(1,3)], ylim = st_bbox(covariates)[c(2,4)]) + # what if you turn this off?
   labs(title = 'Distance to highways in the Pyrénées', subtitle = 'Source: Route500')
+```
+
+---
+class: inverse, middle, center
+# Bonus 2021
+---
+
+# HOW TO : Generate geometries from X, Y columns
+
+* We're using [EPSG code = 4326](https://epsg.io/4326) as CRS, for WGS84 coordinates 
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+random_pts <- tibble(
+  id_point = seq_len(10),
+  lat=c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
+  lon=c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
+)
+sf_pts <- st_as_sf( #<<
+  random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)  #<<
+sf_pts
+```
+
+---
+
+# Show our scratch sf object from points
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+ggplot() +
+  geom_sf(data=studysites) + 
+  geom_sf(data=sf_pts) +
+  labs(title = 'Monitoring sites and random points')
+```
+
+---
+
+# HOWTO : subset points that intersects polygons
+
+* the geometric predicate `st_intersects` tells us which polygon intersects which point
+* we need input objects with the same CRS
+* if there is no polygon intersected, the result is empty
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+sf_pts <- sf_pts %>% 
+  st_transform(st_crs(studysites))
+result <- st_intersects(sf_pts, studysites) #<<
+result
+```
+
+---
+
+# HOWTO : subset points that intersects polygons
+
+* the geometric predicate `st_intersects` tells us which polygon intersects which point
+* we need input objects with the same CRS
+* if there is no polygon intersected, the result is empty
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+sf_pts <- sf_pts %>% 
+  st_transform(st_crs(studysites))
+result <- st_intersects(sf_pts, studysites)
+subset_pts <- sf_pts %>%  #<<
+  add_column(nb_intersected=sapply(result,length)) %>%  #<<
+  filter(nb_intersected > 0)  #<<
+```
+
+---
+
+# Highlight points intersecting polygons
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+ggplot() +
+  geom_sf(data=studysites) + 
+  geom_sf(data=sf_pts) +
+  geom_sf(data=subset_pts, color="red") +
+  labs(title = 'Monitoring sites and random points')
+```
+
+---
+
+# HOW TO : Make grid
+
+* Let's create an hexagonal grid with 10 km cells covering the studysites area
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+hex_grid <- st_make_grid(studysites, cellsize=10000, square=FALSE)  #<<
+ggplot() +
+  geom_sf(data=studysites, color=NA, fill="blue", alpha=0.4) + 
+  geom_sf(data=hex_grid, fill=NA, lwd=0.2) +
+  labs(title = 'Making hexagonal grid')
+
 ```
 
 ---
@@ -771,8 +865,8 @@ background-position: 9% 15%
 
 |                                                                                                            |                                   |
 | :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
-| `r icon::fa("envelope")` | **olivier.gimenez@cefe.cnrs.fr**       |
-| `r icon::fa("home")` | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
-| `r icon::fa_twitter()` | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
-| `r icon::fa_github()` | [**@oliviergimenez**](https://github.com/oliviergimenez)
+| `r icons::fontawesome("envelope")` | **olivier.gimenez@cefe.cnrs.fr**       |
+| `r icons::fontawesome("home")` | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
+| `r icons::fontawesome("twitter")` | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
+| `r icons::fontawesome("github")` | [**@oliviergimenez**](https://github.com/oliviergimenez)
 
