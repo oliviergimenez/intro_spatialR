@@ -1,0 +1,875 @@
+#' ---
+#' title: "GIS and mapping in R"
+#' subtitle: "Introduction to the sf package"
+#' author: "Olivier Gimenez"
+#' date: "2022-05-13"
+#' output:
+#'   xaringan::moon_reader:
+#'     css: ["css/rutgers-tidyverse.css","css/rutgers-fonts_og.css"]
+#'     lib_dir: libs
+#'     nature:
+#'       highlightStyle: github
+#'       highlightLines: true
+#'       countIncrementalSlides: false
+#' ---
+#' 
+## ----setup, include=FALSE-------------------------------------------------------------------------------------------
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.align = "center", 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      paged.print = FALSE)
+
+#' 
+#' 
+#' # Simple Features for R: the sf package
+#' 
+## ----echo = FALSE, out.width = "700px"------------------------------------------------------------------------------
+knitr::include_graphics("img/sfcartoon.jpg")
+
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # Introduction
+#' ---
+#' 
+#' 
+#' # What's so nice about `sf`?
+#' 
+#' * Easy to work with spatial data because the distinction between spatial data and other forms of data is minimized
+#' 
+#' * Spatial objects are stored as **dataframes**, with the feature geometries stored in list-columns
+#' 
+#' * This is similar to the way that **spatial databases** are structured
+#' 
+#' * All functions begin with `st_` for easy autofill with RStudio tab 
+#' 
+#' * Functions are **pipe-friendly**
+#' 
+#' * `dplyr` and `tidyr` verbs have been defined for the `sf` objects
+#' 
+#' * `ggplot2` is able to plot `sf` objects directly
+#' 
+## ----echo=FALSE, out.width = "100px"--------------------------------------------------------------------------------
+knitr::include_graphics("img/animatedsf.gif")
+
+#' 
+#' 
+#' ---
+#' 
+#' # Load packages
+#' 
+## ----message = TRUE, warning = FALSE, paged.print = FALSE-----------------------------------------------------------
+library(sf) # GIS package
+library(tidyverse) # tidyverse packages, dplyr and ggplot2 among others
+theme_set(theme_minimal(base_size = 14)) # set ggplot theme 
+
+#' 
+#' 
+#' ---
+#' 
+#' ## Vector layers in `sf`
+#' 
+#' * The `sf` class is a hierarchical structure composed of 3 classes 
+#'     * In green, **sf** - Vector layer object, `data.frame` with $\geq 1$ attribute columns and 1 geometry column
+#'     * In red, **sfc** - Geometric part of vector layer - geometry column
+#'     * In blue, **sfg** - Geometry of individual [simple feature](https://en.wikipedia.org/wiki/Simple_Features)
+#' 
+## ---- echo=FALSE----------------------------------------------------------------------------------------------------
+knitr::include_graphics("img/sf_xfig.png")
+
+#' 
+#' 
+#' ---
+#' 
+#' ## Simple feature geometry **`sfg`**
+#' 
+## ----echo=FALSE, dpi = 300, out.width = "550px", fig.align='center',warning=FALSE-----------------------------------
+# knitr::include_graphics("images/simple_feature_types.png")
+point <- st_as_sfc("POINT (30 10)")[[1]]
+linestring <- st_as_sfc("LINESTRING (30 10, 10 30, 40 40)")[[1]]
+polygon <- st_as_sfc("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),(20 30, 35 35, 30 20, 20 30))")[[1]]
+multipoint <- st_as_sfc("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")[[1]]
+multilinestring <- st_as_sfc("MULTILINESTRING ((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))")[[1]]
+multipolygon <- st_as_sfc("MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))")[[1]]
+geometrycollection <- st_as_sfc("GEOMETRYCOLLECTION (POLYGON((30 20, 45 40, 10 40, 30 20)),LINESTRING (10 10, 20 20, 10 30),POINT (40 20))")[[1]]
+pol <- st_as_sfc("POLYGON((30 20, 45 40, 10 40, 30 20))")[[1]]
+l <- st_as_sfc("LINESTRING (10 10, 20 20, 10 30)")[[1]]
+p <- st_as_sfc("POINT (40 20)")[[1]]
+opar <- par()
+par(mfrow = c(2, 4), mar = c(1,1,1,1))
+plot(point, main = "POINT", col = "blue", cex = 1.8, lwd = 2)
+plot(linestring, main = "LINESTRING", col = "blue", lwd = 2)
+plot(polygon, main = "POLYGON", border = "blue", col = "#0000FF33", lwd = 2)
+plot(1, type="n", axes=F, xlab="", ylab="")
+plot(multipoint, main = "MULTIPOINT", col = "blue", cex = 1.8, lwd = 2)
+plot(multilinestring, main = "MULTILINESTRING", col = "blue", lwd = 2)
+plot(multipolygon, main = "MULTIPOLYGON", border = "blue", col = "#0000FF33", lwd = 2)
+plot(geometrycollection, main = "GEOMETRYCOLLECTION", col = NA, border = NA, lwd = 2)
+plot(pol, border = "blue", col = "#0000FF33", add = TRUE, lwd = 2)
+plot(l, col = "blue", add = TRUE, lwd = 2)
+plot(p, col = "blue", add = TRUE, cex = 1.8, lwd = 2)
+par(opar)
+
+#' 
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # First steps
+#' ---
+#' 
+#' 
+#' # Case study
+#' 
+## ----echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"---------
+knitr::include_graphics("img/oryxpaper.png")
+
+#' 
+#' ---
+#' 
+#' # Read in spatial data
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites_raw <- st_read("shp/bearpyrenees.shp")
+
+#' 
+#' ---
+#' 
+#' # Examine structure
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+glimpse(studysites_raw)
+
+#' 
+#' ---
+#' 
+#' # Examine structure
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites_raw
+
+#' 
+#' 
+#' ---
+#' 
+#' # Select relevant columns
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites <- studysites_raw %>%
+  select('bearpresence' = pres_08_12, #<<
+         'idsite' = Numero) #<<
+studysites
+
+#' 
+#' ---
+#' 
+#' # Our first map
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+studysites %>%
+  ggplot() + #<<
+  geom_sf() + #<<
+  labs(title = 'Brown bear monitoring sites in the French Pyrenees mountains',
+       subtitle = 'Source: French Biodiversity Agency')
+
+#' 
+#' ---
+#' 
+#' # Where did the species occur?
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+studysites %>%
+  ggplot() +
+  geom_sf(aes(fill = bearpresence)) + #<<
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Biodiversity Agency')
+
+#' 
+#' ---
+#' 
+#' # Where did the species occur?
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+studysites %>%
+  ggplot() +
+  geom_sf(aes(fill = bearpresence)) + 
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Biodiversity Agency',
+       fill = "Presence") #<<
+
+#' 
+#' 
+#' 
+#' ---
+#' 
+#' # Take control of your legends
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+studysites %>%
+  ggplot() +
+  geom_sf(aes(fill = bearpresence)) +
+  labs(title = 'Brown bear presence in the French Pyrenees mountains',
+       subtitle = 'Source: French Biodiversity Agency') +
+  scale_fill_manual(values = c('gray90','steelblue1','steelblue4'), #<<
+                    name = "Bear presence", #<<
+                    labels = c("Absent", "Occasional", "Regular")) #<<
+
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # Spatial operations: transform, crop, intersect, join
+#' ---
+#' 
+#' # Forest cover
+#' 
+#' * Forest cover might be a driver of brown bear distribution
+#' 
+#' * We use corine land cover (CLC) data (2012 version) to get forest cover
+#' 
+#' * Data can be downloaded [from the official website](http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/millesime/CLC12_FR_RGF_SHP.zip)
+#' 
+#' * An explanation of what's in the data is available [here](https://www.statistiques.developpement-durable.gouv.fr/sites/default/files/2019-07/Nomenclature_CLC.pdf).  
+#' 
+#' ---
+#' 
+#' # Read in data
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+clc2012 <- st_read("shp/CLC12_FR_RGF.shp")
+
+#' 
+#' ---
+#' 
+#' # Read in data
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+clc2012
+
+#' 
+#' ---
+#' 
+#' # Extract forest codes
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+forest <- clc2012 %>%
+  filter(CODE_12 == '311' | CODE_12 == '312' | CODE_12 == '313') #<<
+forest
+
+#' 
+#' ---
+#' 
+#' # Use same coordinates system for map of the Pyrénées and forest layer
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites <- studysites %>% 
+  st_transform(crs = st_crs(forest))  #<<
+studysites
+
+#' 
+#' ---
+#' 
+#' # Calculate area of each site
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites %>% 
+  mutate(area = st_area(.), #<<
+         .before = 1)
+
+#' 
+#' ---
+#' 
+#' # Convert area in km<sup>2</sup>
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites %>% 
+  mutate(.before = 1,
+         area = st_area(.),
+         areakm2 = units::set_units(area, km^2)) #<<
+
+#' 
+#' ---
+#' 
+#' # Define big sites (area > 300 km<sup>2</sup>)
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites <- studysites %>% 
+  mutate(.before = 1,
+         area = st_area(.),
+         areakm2 = units::set_units(area, km^2),
+         bigsites = ifelse(as.numeric(areakm2) > 300, areakm2, NA)) #<<
+studysites
+
+#' 
+## ----include=FALSE--------------------------------------------------------------------------------------------------
+# st_is_valid(studysites)
+studysites <- st_make_valid(studysites) %>% st_cast()
+
+#' 
+#' 
+#' 
+#' ---
+#' # Map again, with area on top of big sites
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+studysites %>%
+  ggplot() + 
+  geom_sf() +
+  geom_sf_label(aes(label = round(bigsites))) + #<<
+  labs(title = 'Brown bear big monitoring sites in the French Pyrenees mountains',
+       subtitle = 'Big sites have area > 300km2',
+       caption = 'Data from: French Biodiversity Agency',
+       x = "", y = "")
+
+#' 
+#' ---
+#' 
+#' # Crop forest to match study area boundaries
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+forest %>% 
+  st_crop(st_bbox(studysites)) %>% #<<
+  as_tibble()
+
+#' 
+#' ---
+#' 
+#' # Then intersect the two layers
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+forest %>% 
+  st_crop(st_bbox(studysites)) %>%
+  st_intersection(studysites) %>% #<<
+  as_tibble()
+
+#' 
+#' ---
+#' 
+#' # Get forest area for each intersected `sfg`
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+forest %>% 
+  st_crop(st_bbox(studysites)) %>%
+  st_intersection(studysites) %>%
+  mutate(area = st_area(.)) %>% #<<
+  as_tibble()
+
+#' 
+#' ---
+#' 
+#' # Sum forest over all study sites
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+forestpyrenees <- forest %>% 
+  st_crop(st_bbox(studysites)) %>%
+  st_intersection(studysites) %>%
+  mutate(area = st_area(.)) %>%
+  group_by(idsite) %>% # groups a data frame by variables #<< 
+  summarise(areaforest = sum(area)) %>% # perform group-wise summaries #<<
+  as_tibble() %>%
+  select(-geometry)
+forestpyrenees
+
+#' 
+#' ---
+#' 
+#' # Join `sf` and `tibble` objects 
+#' ## More info [here](https://r-spatial.github.io/sf/reference/tidyverse.html)
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+studysites %>% 
+  inner_join(forestpyrenees, by = 'idsite') #<<
+
+#' 
+#' ---
+#' 
+#' # Calculate forest cover
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+covariates <- studysites %>% 
+  inner_join(forestpyrenees, by = 'idsite') %>% 
+  mutate(.before = 1,
+         forestcover = areaforest / area) #<<
+
+#' 
+#' 
+#' ---
+#' 
+#' # Map forest cover
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE----
+## covariates %>%
+##   ggplot() +
+##   aes(fill = as.numeric(forestcover)) +
+##   geom_sf(lwd = 0.1) +
+##   scale_fill_viridis_c(
+##     labels = scales::percent_format(), #<< format percentage
+##     name = 'Cover',
+##     alpha = 0.7) +  #<< control transparency
+##   labs(title = 'Map of forest cover in the Pyrenees mountains',
+##        subtitle = 'Source: Corine Land Cover 2012')
+
+#' 
+#' ---
+#' 
+#' # Map forest cover
+## ----echo = FALSE, message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300----
+covariates %>%
+  ggplot() +
+  aes(fill = as.numeric(forestcover)) +
+  geom_sf(lwd = 0.1) +
+  scale_fill_viridis_c(
+    labels = scales::percent_format(), #<< format percentage
+    name = 'Cover',
+    alpha = 0.7) +  #<< control transparency
+  labs(title = 'Map of forest cover in the Pyrenees mountains',
+       subtitle = 'Source: Corine Land Cover 2012')
+
+#' 
+#' ---
+#' 
+#' # Interactive map with `mapview`
+#' ## More info [here](https://r-spatial.github.io/mapview/)
+#' 
+## ---- fig.align="center", fig.width=5, fig.height=5, out.width="100%", warning=FALSE--------------------------------
+library(mapview)
+mapview(covariates, zcol = "bearpresence") #<<
+
+#' 
+#' ---
+#' 
+#' # Interactive map with `mapview`
+## ---- fig.align="center", fig.width=4, fig.height=4, out.width="100%", warning=FALSE--------------------------------
+covariates <- covariates %>% mutate(forestcover = as.numeric(forestcover))
+mapview(covariates, zcol = "forestcover", map.types = "OpenTopoMap") #<<
+# map.types = "CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", 
+# "Esri.WorldImagery"
+
+#' 
+#' 
+#' ---
+#' 
+#' # Human density
+#' 
+#' * Human density might be a driver of brown bear distribution
+#' 
+#' * We use data on population size of cities in France
+#' 
+#' * Population data is available from **IGN Admin-Express** database   [here](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#admin-express)  
+#' 
+#' ---
+#' 
+#' # Human density
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+load("shp/france_population_data_2016.RData")
+glimpse(df.france)
+
+#' 
+#' ---
+#' 
+#' # Transform into lower case
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+colnames(df.france) <- colnames(df.france) %>% 
+  str_to_lower() #<<
+colnames(df.france)
+
+#' 
+#' ---
+#' 
+#' # Have a look to the distribution
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+df.france$population %>% 
+  summary() #<<
+
+#' 
+#' ---
+#' 
+#' # Calculate density
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+df.france <- df.france %>% 
+  mutate(density = population/superficie*100) #<<
+as_tibble(df.france)
+
+#' 
+#' ---
+#' 
+#' # Show density
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+df.france %>%
+  pull(density) %>%
+  head()
+
+#' 
+#' ---
+#' 
+#' # Sum population size over sites
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+df.pyrenees <- df.france %>% 
+  st_transform(crs = st_crs(forest)) %>%
+  st_crop(st_bbox(covariates)) %>%
+  st_intersection(covariates) %>%
+  st_set_geometry(NULL) %>%
+  group_by(idsite) %>% #<<
+  summarise(humpop = sum(population)) #<<
+df.pyrenees
+
+#' 
+#' ---
+#' 
+#' # Join, then calculate density
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+covariates <- covariates %>% 
+  inner_join(df.pyrenees, by = 'idsite') %>% #<<
+  mutate(.before = 1,
+         humdens = humpop / (area/1000000)) #<<
+as_tibble(covariates)
+
+#' 
+#' ---
+#' 
+#' # Map human population density
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300, eval = FALSE----
+## covariates %>%
+##   ggplot() +
+##   aes(fill = as.numeric(humdens)) +
+##   geom_sf(lwd = 0.1) +
+##   scale_fill_viridis_c(
+##     name = bquote('Density\n(people per km'^2*')'),
+##     alpha = 0.7) +
+##   labs(title = 'Human population density',
+##        subtitle = 'Source: IGN GEOFLA 2016')
+
+#' 
+#' ---
+#' 
+#' # Map human population density
+## ----echo=FALSE, fig.align='center', fig.dim=c(17, 12), message=FALSE, warning=FALSE, dpi = 300, paged.print=FALSE----
+covariates %>%
+  ggplot() +
+  aes(fill = as.numeric(humdens)) +
+  geom_sf(lwd = 0.1) +
+  scale_fill_viridis_c(
+    name = bquote('Density\n(people per km'^2*')'),
+    alpha = 0.7) + 
+  labs(title = 'Human population density',
+       subtitle = 'Source: Source: IGN GEOFLA 2016')
+
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # Spatial operations: distance
+#' ---
+#' 
+#' 
+#' # Distance to highways
+#' 
+#' * Distance to highways might be a driver of brown bear distribution
+#' 
+#' * We use data from [Route500 database](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html#route-500)
+#' 
+#' ---
+#' 
+#' # Read in data
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+roads <- st_read("shp/TRONCON_ROUTE.shp")
+
+#' 
+#' ---
+#' 
+#' # Read in data
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+as_tibble(roads)
+
+#' 
+#' ---
+#' 
+#' # Focus on highways
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+highways <- roads %>%
+  filter(CLASS_ADM == "Autoroute") #<<
+as_tibble(highways)
+
+#' 
+#' ---
+#' 
+#' # Reproject and crop to match France extent
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+highways <- highways %>% 
+  st_transform(crs = st_crs(forest)) %>% #<<
+  st_crop(st_bbox(df.france)) #<<
+as_tibble(highways)
+
+#' 
+#' ---
+#' 
+#' # Get centroids of each monitoring sites
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+centroids <- covariates %>% 
+  st_centroid() #<<
+as_tibble(centroids)
+
+#' 
+#' ---
+#' 
+#' # Then distance from centroids to highways
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+dtohighways <- highways %>% 
+  st_distance(centroids, by_element = F) #<<
+head(dtohighways)
+
+#' 
+#' ---
+#' 
+#' # Convert distance to highways into numeric values and keep only minimal distance to highways
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+units(dtohighways) <- units::as_units("km")
+dtohighwaysnum <- matrix(as.numeric(dtohighways),
+                      nrow = nrow(dtohighways),
+                      ncol = ncol(dtohighways))
+dtohighwaysnum <- apply(dtohighwaysnum,2,min)
+head(dtohighwaysnum)
+
+#' 
+#' ---
+#' 
+#' # Map the distance to highways
+## ----message=FALSE, warning=FALSE, paged.print=FALSE, eval = FALSE--------------------------------------------------
+## covariates <- covariates %>%
+##   add_column(dtohighwaysnum)
+## covariates %>%
+##   ggplot() +
+##   geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
+##   scale_fill_viridis_c(name = 'distance\n(km)',alpha = 0.7) +
+##   geom_sf(data = highways, aes(color = 'red'), show.legend = "line") +
+##   scale_color_manual(values = "red", labels = "", name = "highway") +
+##   coord_sf(xlim = st_bbox(covariates)[c(1,3)],
+##            ylim = st_bbox(covariates)[c(2,4)]) + # what if you turn this off?
+##   labs(title = 'Distance to highways in the Pyrénées',
+##        subtitle = 'Source: Route500')
+
+#' 
+#' ---
+#' 
+#' # Map the distance to highways
+## ----echo=FALSE, fig.align='center', fig.dim=c(15, 7), message=FALSE, warning=FALSE, dpi = 300, paged.print=FALSE----
+covariates <- covariates %>%
+  add_column(dtohighwaysnum)
+covariates %>%
+  ggplot() +
+  geom_sf(lwd = 0.1, aes(fill = dtohighwaysnum)) +
+  scale_fill_viridis_c(name = 'distance\n(km)',alpha = 0.7) + 
+  geom_sf(data = highways, aes(color = 'red'), show.legend = "line") +
+  scale_color_manual(values = "red", labels = "", name = "highway") +
+  coord_sf(xlim = st_bbox(covariates)[c(1,3)], ylim = st_bbox(covariates)[c(2,4)]) + # what if you turn this off?
+  labs(title = 'Distance to highways in the Pyrénées', subtitle = 'Source: Route500')
+
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # Moooooore
+#' ---
+#' 
+#' # Generate geometries from (X,Y) columns
+#' 
+#' * We use [EPSG code = 4326](https://epsg.io/4326) as CRS for WGS84 coordinates
+#' 
+#' * Let's make a tibble with 10 points
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE----------------------------------------------------------
+random_pts <- tibble(
+  id_point = seq_len(10),
+  lat = c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
+  lon = c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
+)
+
+sf_pts <- st_as_sf( #<<
+  random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)  #<<
+
+#' 
+#' ---
+#' 
+#' # Generate geometries from (X,Y) columns
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE----------------------------------------------------------
+sf_pts
+
+#' 
+#' ---
+#' 
+#' # Display our points
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center', fig.dim = c(15, 7), dpi = 300-----
+ggplot() +
+  geom_sf(data = studysites) + 
+  geom_sf(data = sf_pts) +
+  labs(title = 'Study area and some random points')
+
+#' 
+#' ---
+#' 
+#' # Find points that intersect polygons
+#' 
+#' * `st_intersects` tells us which polygons intersect which points
+#' * All objects should have same CRS
+#' * If there is no intersection, we get an empty result
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+sf_pts <- sf_pts %>% 
+  st_transform(st_crs(studysites))
+result <- st_intersects(sf_pts, studysites) #<<
+result
+
+#' 
+#' ---
+#' 
+#' # Find points that intersect polygons
+#' 
+#' * `st_intersects` tells us which polygons intersect which points
+#' * All objects should have same CRS
+#' * If there is no intersection, we get an empty result
+#' 
+## ----message=FALSE, warning=FALSE, paged.print=FALSE----------------------------------------------------------------
+sf_pts <- sf_pts %>% 
+  st_transform(st_crs(studysites))
+
+result <- st_intersects(sf_pts, studysites)
+
+subset_pts <- sf_pts %>%  #<<
+  add_column(nb_intersected = sapply(result, length)) %>%  #<<
+  filter(nb_intersected > 0)  #<<
+
+#' 
+#' ---
+#' 
+#' # Highlight points intersecting polygons
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+ggplot() +
+  geom_sf(data = studysites) + 
+  geom_sf(data = sf_pts) +
+  geom_sf(data = subset_pts, color = "red") +
+  labs(title = 'Study area and some random points')
+
+#' 
+#' ---
+#' 
+#' # How to make a grid
+#' 
+#' * Let's create an hexagonal grid with 10 km cells covering the study area
+#' 
+## ----message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300------
+hex_grid <- st_make_grid(studysites, cellsize = 10000, square = FALSE)  #<<
+
+ggplot() +
+  geom_sf(data = studysites, color = NA, fill = "blue", alpha = 0.4) + 
+  geom_sf(data = hex_grid, fill = NA, lwd = 0.2) +
+  labs(title = 'A hexagonal grid')
+
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # Wrap up
+#' ---
+#' 
+#' 
+#' ## Geometric calculations
+#' 
+#' **Geometric operations** on vector layers can conceptually be divided into **three groups** according to their output:
+#' 
+#' * **Numeric** values: Functions that summarize geometrical properties of: 
+#'     * A **single layer** (e.g. area, length)
+#'     * A **pair of layers** (e.g. distance)
+#'     
+#' * **Logical** values: Functions that evaluate whether a certain condition holds true, regarding:
+#'     * A **single layer** (e.g. geometry is valid) 
+#'     * A **pair of layers** (e.g. feature A intersects feature B)
+#'     
+#' * **Spatial** layers: Functions that create a new layer based on: 
+#'     * A **single layer** (e.g. centroids) 
+#'     * A **pair of layers** (e.g. intersection area)
+#' 
+#' ---
+#' 
+#' ## Numeric
+#' 
+#' * Several functions to calculate **numeric geometric properties** of vector layers: 
+#'     * `st_length`
+#'     * `st_area`
+#'     * `st_distance`
+#'     * `st_bbox`
+#'     * ...
+#' 
+#' ---
+#' 
+#' ## Logical
+#' 
+#' * Given two layers, `x` and `y`, the following **logical geometric functions** check whether each feature in `x` maintains the specified **relation** with each feature in `y`:
+#'     * `st_intersects`
+#'     * `st_disjoint`
+#'     * `st_touches`
+#'     * `st_crosses`
+#'     * `st_within`
+#'     * `st_contains`
+#'     * `st_overlaps`
+#'     * `st_covers`
+#'     * `st_equals`
+#'     * ...
+#' 
+#' ---
+#' 
+#' ## Spatial
+#' 
+#' * Common **geometry-generating** functions applicable to **individual** geometries:
+#'     * `st_centroid`
+#'     * `st_buffer`
+#'     * `st_union`
+#'     * `st_sample`
+#'     * `st_convex_hull`
+#'     * `st_voronoi`
+#'     * ...
+#'     
+#'     
+#'     
+#' ---
+#' 
+#' ## All `sf` methods
+#' 
+## ---- echo=FALSE----------------------------------------------------------------------------------------------------
+methods(class='sf')
+
+#' 
+#' 
+#' ---
+#' class: inverse, middle, center
+#' # To go further
+#' ---
+#' 
+#' 
+#' # To dive even deeper into sf
+#' 
+#' * Detailed sf package [vignettes](https://r-spatial.github.io/sf/articles/)
+#' 
+#' * Blog posts: [here](https://www.r-spatial.org/r/2016/02/15/simple-features-for-r.html), [here](https://www.r-spatial.org/r/2016/07/18/sf2.html), [here](https://www.r-spatial.org/r/2016/11/02/sfcran.html), [here](https://www.r-spatial.org/r/2017/01/12/newssf.html) and [there](https://statnmap.com/fr/2018-07-14-initiation-a-la-cartographie-avec-sf-et-compagnie/) (in French)
+#' 
+#' * [wiki page](https://github.com/r-spatial/sf/wiki/Migrating) describing sp-sf migration
+#' 
+#' * Awesome online book [Geocomputation with R](https://geocompr.robinlovelace.net/) by Lovelace, Nowosad and Muenchow
+#' 
+## ----echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "150px", fig.align = "center"---------
+knitr::include_graphics("img/lovelacebookcover.png")
+
+#' 
+#' ---
+#' 
+#' # The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
+#' 
+## ----echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"---------
+knitr::include_graphics("img/sf_Page_1.png")
+
+#' 
+#' ---
+#' 
+#' # The [RStudio Cheat Sheets](https://www.rstudio.com/resources/cheatsheets/)
+#' 
+## ----echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"---------
+knitr::include_graphics("img/sf_Page_2.png")
+
+#' 
+#' 
+#' ---
+#' class: title-slide-final, middle
+#' background-size: 55px
+#' background-position: 9% 15%
+#' 
+#' # Thanks!
+#' 
+#' ### I created these slides with [xaringan](https://github.com/yihui/xaringan) and [RMarkdown](https://rmarkdown.rstudio.com/) using the [rutgers css](https://github.com/jvcasillas/ru_xaringan) that I slightly modified.
+#' 
+#' ### Credits: @cyber_nard contributed a few slides, and I used material from @StrimasMackey, @jafflerbach, @StatnMap, @SharpSightLabs and @edzerpebesma

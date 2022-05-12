@@ -2,7 +2,7 @@
 title: "GIS and mapping in R"
 subtitle: "Introduction to the sf package"
 author: "Olivier Gimenez"
-date: "2020-10-30"
+date: "2022-05-13"
 output:
   xaringan::moon_reader:
     css: ["css/rutgers-tidyverse.css","css/rutgers-fonts_og.css"]
@@ -59,10 +59,10 @@ knitr::include_graphics("img/animatedsf.gif")
 
 # Load packages
 
-```{r message=TRUE, warning=FALSE, paged.print=FALSE}
+```{r message = TRUE, warning = FALSE, paged.print = FALSE}
 library(sf) # GIS package
 library(tidyverse) # tidyverse packages, dplyr and ggplot2 among others
-theme_set(theme_minimal()) # set ggplot theme 
+theme_set(theme_minimal(base_size = 14)) # set ggplot theme 
 ```
 
 
@@ -121,7 +121,7 @@ class: inverse, middle, center
 
 # Case study
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "800px", fig.align = "center"}
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, out.width = "600px", fig.align = "center"}
 knitr::include_graphics("img/oryxpaper.png")
 ```
 
@@ -170,7 +170,7 @@ studysites %>%
   ggplot() + #<<
   geom_sf() + #<<
   labs(title = 'Brown bear monitoring sites in the French Pyrenees mountains',
-       subtitle = 'Source: French Game and Wildlife Agency')
+       subtitle = 'Source: French Biodiversity Agency')
 ```
 
 ---
@@ -182,7 +182,7 @@ studysites %>%
   ggplot() +
   geom_sf(aes(fill = bearpresence)) + #<<
   labs(title = 'Brown bear presence in the French Pyrenees mountains',
-       subtitle = 'Source: French Game and Wildlife Agency')
+       subtitle = 'Source: French Biodiversity Agency')
 ```
 
 ---
@@ -194,7 +194,7 @@ studysites %>%
   ggplot() +
   geom_sf(aes(fill = bearpresence)) + 
   labs(title = 'Brown bear presence in the French Pyrenees mountains',
-       subtitle = 'Source: French Game and Wildlife Agency',
+       subtitle = 'Source: French Biodiversity Agency',
        fill = "Presence") #<<
 ```
 
@@ -209,7 +209,7 @@ studysites %>%
   ggplot() +
   geom_sf(aes(fill = bearpresence)) +
   labs(title = 'Brown bear presence in the French Pyrenees mountains',
-       subtitle = 'Source: French Game and Wildlife Agency') +
+       subtitle = 'Source: French Biodiversity Agency') +
   scale_fill_manual(values = c('gray90','steelblue1','steelblue4'), #<<
                     name = "Bear presence", #<<
                     labels = c("Absent", "Occasional", "Regular")) #<<
@@ -311,7 +311,7 @@ studysites %>%
   geom_sf_label(aes(label = round(bigsites))) + #<<
   labs(title = 'Brown bear big monitoring sites in the French Pyrenees mountains',
        subtitle = 'Big sites have area > 300km2',
-       caption = 'Data from: French Game and Wildlife Agency',
+       caption = 'Data from: French Biodiversity Agency',
        x = "", y = "")
 ```
 
@@ -653,42 +653,52 @@ covariates %>%
 
 ---
 class: inverse, middle, center
-# Bonus 2021
+# Moooooore
 ---
 
-# HOW TO : Generate geometries from X, Y columns
+# Generate geometries from (X,Y) columns
 
-* We're using [EPSG code = 4326](https://epsg.io/4326) as CRS, for WGS84 coordinates 
+* We use [EPSG code = 4326](https://epsg.io/4326) as CRS for WGS84 coordinates
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+* Let's make a tibble with 10 points
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE}
 random_pts <- tibble(
   id_point = seq_len(10),
-  lat=c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
-  lon=c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
+  lat = c(42.96, 42.71, 42.72, 42.95, 42.96, 42.72, 42.68, 42.82, 42.79, 42.85),
+  lon = c(0.31, 0.66, 0.75, 1.60, 0.58, 1.87, 1.07, 1.05, 0.36, 0.06)
 )
+
 sf_pts <- st_as_sf( #<<
   random_pts, coords = c("lon", "lat"), crs=4326, remove=FALSE)  #<<
+```
+
+---
+
+# Generate geometries from (X,Y) columns
+
+```{r message = FALSE, warning = FALSE, paged.print = FALSE}
 sf_pts
 ```
 
 ---
 
-# Show our scratch sf object from points
+# Display our points
 
-```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
+```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center', fig.dim = c(15, 7), dpi = 300}
 ggplot() +
-  geom_sf(data=studysites) + 
-  geom_sf(data=sf_pts) +
-  labs(title = 'Monitoring sites and random points')
+  geom_sf(data = studysites) + 
+  geom_sf(data = sf_pts) +
+  labs(title = 'Study area and some random points')
 ```
 
 ---
 
-# HOWTO : subset points that intersects polygons
+# Find points that intersect polygons
 
-* the geometric predicate `st_intersects` tells us which polygon intersects which point
-* we need input objects with the same CRS
-* if there is no polygon intersected, the result is empty
+* `st_intersects` tells us which polygons intersect which points
+* All objects should have same CRS
+* If there is no intersection, we get an empty result
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 sf_pts <- sf_pts %>% 
@@ -699,18 +709,20 @@ result
 
 ---
 
-# HOWTO : subset points that intersects polygons
+# Find points that intersect polygons
 
-* the geometric predicate `st_intersects` tells us which polygon intersects which point
-* we need input objects with the same CRS
-* if there is no polygon intersected, the result is empty
+* `st_intersects` tells us which polygons intersect which points
+* All objects should have same CRS
+* If there is no intersection, we get an empty result
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 sf_pts <- sf_pts %>% 
   st_transform(st_crs(studysites))
+
 result <- st_intersects(sf_pts, studysites)
+
 subset_pts <- sf_pts %>%  #<<
-  add_column(nb_intersected=sapply(result,length)) %>%  #<<
+  add_column(nb_intersected = sapply(result, length)) %>%  #<<
   filter(nb_intersected > 0)  #<<
 ```
 
@@ -720,25 +732,25 @@ subset_pts <- sf_pts %>%  #<<
 
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
 ggplot() +
-  geom_sf(data=studysites) + 
-  geom_sf(data=sf_pts) +
-  geom_sf(data=subset_pts, color="red") +
-  labs(title = 'Monitoring sites and random points')
+  geom_sf(data = studysites) + 
+  geom_sf(data = sf_pts) +
+  geom_sf(data = subset_pts, color = "red") +
+  labs(title = 'Study area and some random points')
 ```
 
 ---
 
-# HOW TO : Make grid
+# How to make a grid
 
-* Let's create an hexagonal grid with 10 km cells covering the studysites area
+* Let's create an hexagonal grid with 10 km cells covering the study area
 
 ```{r message = FALSE, warning = FALSE, paged.print = FALSE, fig.align = 'center',fig.dim = c(15, 7), dpi = 300}
-hex_grid <- st_make_grid(studysites, cellsize=10000, square=FALSE)  #<<
-ggplot() +
-  geom_sf(data=studysites, color=NA, fill="blue", alpha=0.4) + 
-  geom_sf(data=hex_grid, fill=NA, lwd=0.2) +
-  labs(title = 'Making hexagonal grid')
+hex_grid <- st_make_grid(studysites, cellsize = 10000, square = FALSE)  #<<
 
+ggplot() +
+  geom_sf(data = studysites, color = NA, fill = "blue", alpha = 0.4) + 
+  geom_sf(data = hex_grid, fill = NA, lwd = 0.2) +
+  labs(title = 'A hexagonal grid')
 ```
 
 ---
@@ -860,13 +872,4 @@ background-position: 9% 15%
 
 ### I created these slides with [xaringan](https://github.com/yihui/xaringan) and [RMarkdown](https://rmarkdown.rstudio.com/) using the [rutgers css](https://github.com/jvcasillas/ru_xaringan) that I slightly modified.
 
-### Credits: I used material from @StrimasMackey, @jafflerbach, @StatnMap, @SharpSightLabs and @edzerpebesma 
-
-
-|                                                                                                            |                                   |
-| :--------------------------------------------------------------------------------------------------------- | :-------------------------------- |
-| `r icons::fontawesome("envelope")` | **olivier.gimenez@cefe.cnrs.fr**       |
-| `r icons::fontawesome("home")` | [**https://oliviergimenez.github.io/**](https://oliviergimenez.github.io/) |
-| `r icons::fontawesome("twitter")` | [**@oaggimenez**](https://twitter.com/oaggimenez)                         |
-| `r icons::fontawesome("github")` | [**@oliviergimenez**](https://github.com/oliviergimenez)
-
+### Credits: @cyber_nard contributed a few slides, and I used material from @StrimasMackey, @jafflerbach, @StatnMap, @SharpSightLabs and @edzerpebesma
